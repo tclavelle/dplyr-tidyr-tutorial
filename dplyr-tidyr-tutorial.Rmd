@@ -1,0 +1,140 @@
+---
+title: "Data wrangling with dplyr and tidyr"
+author: "Tyler Clavelle & Dan Ovando"
+date: "February 27, 2016"
+output: html_document
+---
+
+## Overview  
+This tutorial will cover the tidyr and dplyr packages created by the mythical code wizard [Hadley Wickham](https://github.com/hadley) of ggplot2 fame. The following topics will be covered:
+
+1. **Basics of tidyr and dplyr**    
+    + Data frames and data tables  
+    + Piping and chaining  
+2. **Processing and manipulating data**  
+    + Reshaping, subsetting, and joins  
+3. **Analyzing data with dplyr**
+    + Summary and window functions  
+    + Grouping data  
+4. **Using using dplyr with ggplot2**  
+5. **Writing functions with dplyr and tidyr**  
+6. **Using dplyr to connect and analyze external databases**
+
+## Getting Started  
+Install and load the following packages:
+```{r, eval=TRUE,echo=T,warning=FALSE, message=F}
+## Install packages if needed
+# install.packages(dplyr)
+# install.packages(tidyr)
+# install.packages(ggplot2)
+
+# Load packages
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Read in FAO data
+fao<-read.csv(file = 'data/FAO_1950to2012_111014.csv',stringsAsFactors = F)
+load(file = 'data/DBdata_020215.Rdata')
+```
+
+### Why use dplyr and tidyr?
+1. **Speed** - dplyr and tidyr are *really* fast  
+2. **Readability** - the code syntax is straightforward and easy to read  
+3. **Chaining** - *never break the chain*. More on this later  
+4. **Integrates with ggplot2** - plot your data in the same workflow that you manipulate it with
+5. **Can be used to analyze external databases without knowledge of additional database query languages** 
+
+## Basics of dplyr and tidyr  
+### Data frames and data tables
+Although technically two separate packages, **dplyr** and **tidyr** were designed to work together and can basically be thought of as a single package. They are designed to work with data frames as is, but it is generally a good idea to convert data frames to table data using the `tbl_df()` function, particularly when working with large datasets.
+
+```{r, eval=F,echo=T}
+## Using the iris dataset, consider what happens with the following command
+fao # all entries are printed in your console
+head(fao) # top five entries are printed in your console, columns wrap and can be difficult to follow if working with many variables
+summary(fao)
+
+## With dplyr
+fao<-tbl_df(fao) # convert to table data
+fao # now top 10 rows are shown along with data type of each variable. Variables that do not fit in console window are shown below.
+glimpse(fao) # view all columns 
+summary(fao)
+```
+
+### Main verbs of dplyr and tidyr
+In general, it is good practice to have your data organized in a "tidy" format where each column is a variable and each row is an observation.Tidyr and dplyr are designed to help manipulate data sets, allowing you to convert between *wide* and *long* formats, fill in missing values and combinations, separate or merge multiple columns, rename and create new variables, and summarize data according to grouping variables. 
+
+Dplyr and tidyr rely on the following main verbs:  
+
+* Tidyr
+    + `gather()` and `spread()` convert data between wide and long format  
+    + `separate()` and `unite()` separate a single column into multiple columns and vice versa  
+    + `complete()` turns implicit missing values in explicit missing values by completing missing data combinations
+
+* Dplyr
+    + `arrange()` order rows by value of a column  
+    + `rename()` rename columns  
+    + `filter()` subset data based on logical criteria  
+    + `select()` select certain columns  
+    + `mutate()` create a new variable/column  
+    + `summarize()` summarize data into a single row of values  
+    + `group_by()` group data by common variables for performing calculations
+
+Note that *unquoted* variable names are used in tidyr and dplyr functions. We'll use these verbs to process the raw FAO landings data into a more manageable format  
+```{r, eval=F,echo=T}
+# Let's convert the fao data from it's current wide format to a long format using gather()
+df<-gather(fao,key='Year',value = 'Catch',starts_with('X')) # select all columns starting with X
+
+# Now let's rename the columns to more manageable names (new name=old name)
+df<-rename(df,country=Country..Country.,
+           commname=Species..ASFIS.species.,
+           sciname=Species..ASFIS.species..1,
+           spcode=Species..ASFIS.species..2,
+           spgroup=Species..ISSCAAP.group.,
+           spgroupname=Species..ISSCAAP.group..1,
+           regionfao=Fishing.area..FAO.major.fishing.area.,
+           regionfaoname=Fishing.area..FAO.major.fishing.area..1,
+           unit=Measure..Measure.,year=Year,catch=Catch)
+
+# get rid of the spgroup, regionfaoname, and unit columns
+df<-select(df,-spgroup,-regionfaoname,-unit)
+
+# arrange entries by country, scientific name, fao region and year
+df<-arrange(df,country,sciname,regionfao,year)
+
+# strip the X off the front of all the year values and convert that variable to a numeric
+df$year<-as.numeric(gsub(df$year,pattern = 'X', replacement = ''))
+
+# finally remove
+```
+
+#### Piping and chaining code
+While the above workflow is perfectly acceptable, dplyr allows you to use the *pipe* operator to *chain* functions together. Chaining code allows you to streamline your workflow and make it easier to read.
+
+When using the `%>%` operator, first specify the data frame that all following functions will use. For the rest of the chain the data frame argument can be omitted from the remaining functions.
+
+Consider the same process as before only using pipes and a single chain:
+
+```{r,eval=F,echo=T}
+
+df<- fao %>%
+  gather(key='Year',value = 'Catch',starts_with('X')) %>%
+  rename(country=Country..Country.,
+         commname=Species..ASFIS.species.,
+         sciname=Species..ASFIS.species..1,
+         spcode=Species..ASFIS.species..2,
+         spgroup=Species..ISSCAAP.group.,
+         spgroupname=Species..ISSCAAP.group..1,
+         regionfao=Fishing.area..FAO.major.fishing.area.,
+         regionfaoname=Fishing.area..FAO.major.fishing.area..1,
+         unit=Measure..Measure.,year=Year,catch=Catch) %>%
+  select(-spgroup,-regionfaoname,-unit) %>%
+  arrange(country,sciname,regionfao,year)
+
+```
+
+The `df$spcode` variable actually consists of 5 individual parts. 
+
+![](spcodes.png)
+
