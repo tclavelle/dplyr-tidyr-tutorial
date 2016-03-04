@@ -103,10 +103,6 @@ df<-select(df,-spgroup,-regionfaoname,-unit)
 # arrange entries by country, scientific name, fao region and year
 df<-arrange(df,country,sciname,regionfao,year)
 
-# strip the X off the front of all the year values and convert that variable to a numeric
-df$year<-as.numeric(gsub(df$year,pattern = 'X', replacement = ''))
-
-# finally remove
 ```
 
 #### Piping and chaining code
@@ -133,6 +129,26 @@ df<- fao %>%
   arrange(country,sciname,regionfao,year)
 
 ```
+
+Before moving on we need to do some quick data cleaning
+```{r,eval=F,echo=T}
+# strip the X off the front of all the year values and convert that variable to numeric
+df$year<-as.numeric(gsub(df$year,pattern = 'X', replacement = ''))
+
+# remove the "Totals" vales
+df<-filter(df,!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')))
+```
+
+Here are a few more examples of chaining code to select, filter, and arrange datasets  
+
+```{r,eval=F,echo=T}
+
+
+df %>%
+  filter(country=='Canada' & year==2012) %>%
+  select(year,country,commname,catch) %>%
+  arrange(catch)
+
 
 The `df$spcode` variable actually consists of 5 individual parts. 
 
