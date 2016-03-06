@@ -10,6 +10,9 @@ output:
 ---
 
 ## Overview  
+
+> Data scientists, according to interviews and expert estimates, spend from 50 percent to 80 percent of their time mired in the mundane labor of collecting and preparing data, before it can be explored for useful information. - [NYTimes (2014)](http://www.nytimes.com/2014/08/18/technology/for-big-data-scientists-hurdle-to-insights-is-janitor-work.html)
+
 This tutorial will cover the tidyr and dplyr packages created by the mythical code wizard [Hadley Wickham](https://github.com/hadley) of ggplot2 fame. The following topics will be covered:
 
 ### References  
@@ -312,3 +315,23 @@ The `df$spcode` variable actually consists of 5 individual parts.
 
 ![](spcodes.png)
 
+
+## Resources
+
+- [Data wrangling cheatsheet (`dplyr`,`tidyr`)](http://ucsb-bren.github.io/refs/cheatsheets/data-wrangling-cheatsheet.pdf)
+- [Data wrangling with R and RStudio](https://www.rstudio.com/resources/webinars/data-wrangling-with-r-and-rstudio/)
+    - [slides](http://ucsb-bren.github.io/env-info/wk03_dplyr/wrangling-webinar.pdf)
+- [dplyr vignette: Introduction to dplyr](https://cran.rstudio.com/web/packages/dplyr/vignettes/introduction.html)
+    - [Two-table verbs](https://cran.rstudio.com/web/packages/dplyr/vignettes/two-table.html)
+    - [Window functions and grouped mutate/filter](https://cran.rstudio.com/web/packages/dplyr/vignettes/window-functions.html)
+    - [Databases](https://cran.rstudio.com/web/packages/dplyr/vignettes/databases.html)
+    - [Non-standard evaluation](https://cran.rstudio.com/web/packages/dplyr/vignettes/nse.html)
+- [tidyr vignette: Tidy data](https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html)
+- [Introduction to dplyr for Faster Data Manipulation in R](https://rpubs.com/justmarkham/dplyr-tutorial)
+- [Environmental Informatics | ucsb-bren/env-info](http://ucsb-bren.github.io/env-info/)
+
+### Example Analyses
+
+- [NOAA Storm Data - a Brief Analysis of Impact on Health and Economy](http://rstudio-pubs-static.s3.amazonaws.com/25871_1ffdd88781bd4e6194d93fd327a25659.html)
+- [dplyr example with fish data](http://rpubs.com/dogle/31773) (more on [Introductory Fisheries Analysis with R | fishR](https://fishr.wordpress.com/ifar/))
+- [rnoaa - Access to NOAA National Climatic Data Center data](https://ropensci.org/blog/2014/03/13/rnoaa/)
