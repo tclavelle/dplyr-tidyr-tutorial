@@ -141,26 +141,71 @@ $(document).ready(function () {
 <h3>References</h3>
 <ul>
 <li>RStudio cheatsheet (now accessible via RStudio Help menu!)</li>
+<li>Can <a href="https://www.rstudio.com/products/rstudio/download/">download RStudio</a> if you don’t have latest version 0.99.892 (menu RStudio -&gt; About RStudio), which has many nice additions for running R chunks and providing table of contents in Rmarkdown documents.</li>
 </ul>
 </div>
 <div id="getting-started" class="section level3">
 <h3>Getting Started</h3>
 <p>Install and load the following packages:</p>
 <pre class="r"><code>## Install packages if needed
-# install.packages(dplyr)
-# install.packages(tidyr)
-# install.packages(ggplot2)
+# install.packages('devtools')
+# install.packages('readr')
+# install.packages('dplyr')
+# install.packages('tidyr')
+# install.packages('stringr')
+# install.packages('ggplot2')
 
 # Load packages
+library(readr)
 library(dplyr)
 library(tidyr)
+library(stringr)
 library(ggplot2)
 
-# Read in FAO data
-fao&lt;-read.csv(file = 'data/FAO_1950to2012_111914.csv',stringsAsFactors = F)
-asfis&lt;-read.csv(file = 'data/ASFIS_Feb2014.csv',stringsAsFactors = F)
+# Check package versions after Packages pane -&gt; Update
+devtools::session_info()</code></pre>
+<pre><code>##  setting  value                       
+##  version  R version 3.2.3 (2015-12-10)
+##  system   x86_64, darwin13.4.0        
+##  ui       X11                         
+##  language (EN)                        
+##  collate  en_US.UTF-8                 
+##  tz       America/Los_Angeles         
+##  date     2016-03-06                  
+## 
+##  package    * version date       source        
+##  assertthat   0.1     2013-12-06 CRAN (R 3.2.0)
+##  colorspace   1.2-6   2015-03-11 CRAN (R 3.2.0)
+##  DBI          0.3.1   2014-09-24 CRAN (R 3.2.0)
+##  devtools     1.10.0  2016-01-23 CRAN (R 3.2.3)
+##  digest       0.6.9   2016-01-08 CRAN (R 3.2.3)
+##  dplyr      * 0.4.3   2015-09-01 CRAN (R 3.2.0)
+##  evaluate     0.8.3   2016-03-05 CRAN (R 3.2.4)
+##  formatR      1.3     2016-03-05 CRAN (R 3.2.3)
+##  ggplot2    * 2.1.0   2016-03-01 CRAN (R 3.2.4)
+##  gtable       0.2.0   2016-02-26 CRAN (R 3.2.3)
+##  htmltools    0.3     2015-12-29 CRAN (R 3.2.3)
+##  knitr        1.12.3  2016-01-22 CRAN (R 3.2.3)
+##  magrittr     1.5     2014-11-22 CRAN (R 3.2.0)
+##  memoise      1.0.0   2016-01-29 CRAN (R 3.2.3)
+##  munsell      0.4.3   2016-02-13 CRAN (R 3.2.3)
+##  plyr         1.8.3   2015-06-12 CRAN (R 3.2.0)
+##  R6           2.1.2   2016-01-26 CRAN (R 3.2.3)
+##  Rcpp         0.12.3  2016-01-10 CRAN (R 3.2.3)
+##  readr      * 0.2.2   2015-10-22 CRAN (R 3.2.0)
+##  rmarkdown    0.9.5   2016-02-22 CRAN (R 3.2.3)
+##  scales       0.4.0   2016-02-26 CRAN (R 3.2.3)
+##  stringi      1.0-1   2015-10-22 CRAN (R 3.2.0)
+##  stringr    * 1.0.0   2015-04-30 CRAN (R 3.2.0)
+##  tidyr      * 0.4.1   2016-02-05 CRAN (R 3.2.3)
+##  yaml         2.1.13  2014-06-12 CRAN (R 3.2.0)</code></pre>
+<pre class="r"><code># Read in FAO data
+fao   &lt;- read_csv(file = 'data/FAO_1950to2012_111914.csv') 
+# note: read_csv like read.csv(...,stringsAsFactors = F)
+#       also keeps original column names and converts to tbl_df()
+names(fao) = make.names(names(fao), unique=T) # since original column names have duplicates
+asfis &lt;- read_csv(file = 'data/ASFIS_Feb2014.csv')
 load(file = 'data/DBdata_020215.Rdata')
-
 load(file = 'data/mpack.Rdata')
 lh&lt;-mpack$lh
 rm(mpack)</code></pre>
@@ -193,7 +238,8 @@ summary(fao)
 fao&lt;-tbl_df(fao) # convert to table data
 fao # now top 10 rows are shown along with data type of each variable. Variables that do not fit in console window are shown below.
 glimpse(fao) # view all columns 
-summary(fao)</code></pre>
+summary(fao)
+if (interactive()) View(fao) # interactive==T if in Console, not knitting</code></pre>
 </div>
 <div id="main-verbs-of-dplyr-and-tidyr" class="section level3">
 <h3>Main verbs of dplyr and tidyr</h3>
@@ -228,9 +274,13 @@ summary(fao)</code></pre>
 <p>Note that <em>unquoted</em> variable names are used in tidyr and dplyr functions.</p>
 <p>We’ll use these verbs to process the raw FAO landings data into a more manageable tidy format. Consider the following workflow:</p>
 <pre class="r"><code># Let's convert the fao data from it's current wide format to a long format using gather()
-df&lt;-gather(fao,key='Year',value = 'Catch',starts_with('X')) # select all columns starting with X
+df &lt;- gather(fao, key='Year', value='Catch', num_range('X',1950:2012)) # ?select for num_range()
+# ! df() already a function in R, so d preferred
+if (interactive()) View(df) # interactive==T if in Console, not knitting
+# to handle: '-','...',' F','X'
 
 # Now let's rename the columns to more manageable names (new name=old name)
+# Note the use of backticks around column names with special characters like &quot;(&quot;
 df&lt;-rename(df,country=Country..Country.,
            commname=Species..ASFIS.species.,
            sciname=Species..ASFIS.species..1,
@@ -247,8 +297,9 @@ df&lt;-select(df,-spgroup,-unit)
 df&lt;-arrange(df,country,sciname,regionfao,year)
 
 # strip the X off the front of all the year values and convert that variable to numeric
-df&lt;-mutate(df,year=as.numeric(gsub(year,pattern = 'X', replacement = '')),
-                catch=as.numeric(gsub(catch,pattern = ' F', replacement = '')))
+df &lt;- mutate(df,
+             year  = as.numeric(str_replace(year, 'X', '')),
+             catch = as.numeric(str_replace(catch, c(' F','...','-'), replacement = '')))
 
 # remove the &quot;Totals&quot; vales
 df&lt;-filter(df,!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')))
@@ -261,22 +312,25 @@ df</code></pre>
 <p>While the above workflow is perfectly acceptable, dplyr allows you to use the <em>pipe</em> (<code>%&gt;%</code>) operator to <em>chain</em> functions together. Chaining code allows you to streamline your workflow and make it easier to read.</p>
 <p>When using the <code>%&gt;%</code> operator, first specify the data frame that all following functions will use. For the rest of the chain the data frame argument can be omitted from the remaining functions.</p>
 <p>Now consider the same process as before only using pipes and a single dplyr chain:</p>
-<pre class="r"><code>df&lt;- fao %&gt;%
+<pre class="r"><code>df &lt;- fao %&gt;%
   gather(key='Year',value = 'Catch',starts_with('X')) %&gt;% # convert to long format
-  rename(country=Country..Country., # rename columns
-         commname=Species..ASFIS.species.,
-         spcode=Species..ASFIS.species..1,
-         sciname=Species..ASFIS.species..2,
-         spgroup=Species..ISSCAAP.group.,
-         spgroupname=Species..ISSCAAP.group..1,
-         regionfao=Fishing.area..FAO.major.fishing.area.,
-         unit=Measure..Measure.,year=Year,catch=Catch) %&gt;%
+  rename(
+    country     = Country..Country., # rename columns
+    commname    = Species..ASFIS.species.,
+    spcode      = Species..ASFIS.species..1,
+    sciname     = Species..ASFIS.species..2,
+    spgroup     = Species..ISSCAAP.group.,
+    spgroupname = Species..ISSCAAP.group..1,
+    regionfao   = Fishing.area..FAO.major.fishing.area.,
+    unit        = Measure..Measure.,year=Year,catch=Catch) %&gt;%
   select(-spgroup,-unit) %&gt;% # drop spgroup, regionfaoname, and unit variables
   arrange(country,sciname,regionfao,year) %&gt;% # order by country, sciname, regionfao, and year
-  mutate(year=as.numeric(gsub(year,pattern = 'X', replacement = '')), # strip X from years and convert to numeric
-         catch=as.numeric(gsub(catch,pattern = ' F', replacement = ''))) %&gt;% # strip ' F' and convert to numeric
-  filter(!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)'))) # remove 'Totals' rows
-
+  mutate(
+    year  = as.numeric(str_replace(year, 'X', '')),  # strip X from years and convert to numeric
+    catch = as.numeric(str_replace(catch, c(' F','...','-'), replacement = '')))  %&gt;% # strip ' F' and convert to numeric
+  filter(!country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')) %&gt;% # remove 'Totals' rows
+  filter(!is.na(catch)) # rows: 1,114,596 -&gt; 310,619
+  
 # print data frame
 df</code></pre>
 <p>By chaining our code we were able to reproduce the same data frame without the need to continually overwrite it, and we can easily read each step in the process by observing the different verbs. We also only needed to reference the original dataframe (fao) at the beginning of the chain rather than in each function call.</p>
@@ -305,7 +359,7 @@ df</code></pre>
   select(sciname,vbk,temp,maxl,agem) 
   
 df %&gt;% # note: we need to use the new name
-  left_join(lh) # we only need to specify the right hand data set to join lh with</code></pre>
+  left_join(lh, by='sciname') # we only need to specify the right hand data set to join lh with</code></pre>
 </div>
 </div>
 <div id="analyzing-and-manipulating-data" class="section level2">
@@ -368,11 +422,15 @@ usa&lt;-df %&gt;%
 <pre class="r"><code># Calculate what % of global catch each country contributes in each year and for rank each year by that %
 cntry %&gt;%
   group_by(year) %&gt;%
-  mutate(globalcatch=sum(totalcatch,na.rm=T),globalrank=dense_rank(totalcatch)) %&gt;% # global catch and cntry rank
+  mutate(
+    globalcatch = sum(totalcatch,na.rm=T),
+    globalrank  = dense_rank(totalcatch)) %&gt;% # global catch and cntry rank
   group_by(year,country) %&gt;% # now we group by a different level before our next calculation
-  mutate(percglobal=100*(totalcatch/globalcatch)) %&gt;%
+  mutate(
+    percglobal = 100*(totalcatch/globalcatch)) %&gt;%
   group_by(country) %&gt;%
-  mutate(ingrouprank=dense_rank(totalcatch))</code></pre>
+  mutate(
+    ingrouprank = dense_rank(totalcatch))</code></pre>
 <div id="underscore-functions" class="section level4">
 <h4>Underscore Functions</h4>
 <p>Before we apply the same process to the species group data let’s write a function with dplyr to do it for us. Often, when writing these functions we want to be able to specify different grouping variables. But wait, dplyr arguments use unquoted variable names! Have no fear, underscore is here!</p>
