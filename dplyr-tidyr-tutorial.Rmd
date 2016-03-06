@@ -13,7 +13,7 @@ output:
 
 > Data scientists, according to interviews and expert estimates, spend from 50 percent to 80 percent of their time mired in the mundane labor of collecting and preparing data, before it can be explored for useful information. - [NYTimes (2014)](http://www.nytimes.com/2014/08/18/technology/for-big-data-scientists-hurdle-to-insights-is-janitor-work.html)
 
-This tutorial will cover the tidyr and dplyr packages created by the mythical code wizard [Hadley Wickham](https://github.com/hadley) of ggplot2 fame. The following topics will be covered:
+This tutorial will cover the tidyr and dplyr packages created by the mythical code wizard [Hadley Wickham](https://github.com/hadley) of `ggplot2` fame. The "gg" in `ggplot2` stands for the "grammar of graphics". Hadley similarly considers the functionality of the two packages `dplyr` and `tidyr` to provide the "grammar of data manipulation". The following topics will be covered:
 
 ### References  
 + RStudio cheatsheet (now accessible via RStudio Help menu!)
