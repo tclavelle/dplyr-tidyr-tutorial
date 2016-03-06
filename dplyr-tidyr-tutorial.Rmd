@@ -2,25 +2,20 @@
 title: "Data wrangling with dplyr and tidyr"
 author: "Tyler Clavelle & Dan Ovando"
 date: "February 27, 2016"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    theme: spacelab
+
 ---
 
 ## Overview  
 This tutorial will cover the tidyr and dplyr packages created by the mythical code wizard [Hadley Wickham](https://github.com/hadley) of ggplot2 fame. The following topics will be covered:
 
-1. **Basics of tidyr and dplyr**    
-    + Data frames and data tables  
-    + Piping and chaining  
-2. **Processing and manipulating data**  
-    + Reshaping, subsetting, and joins  
-3. **Analyzing data with dplyr**
-    + Summary and window functions  
-    + Grouping data  
-4. **Using using dplyr with ggplot2**  
-5. **Writing functions with dplyr and tidyr**  
-6. **Using dplyr to connect and analyze external databases**
+### References  
++ RStudio cheatsheet (now accessible via RStudio Help menu!)
 
-## Getting Started  
+### Getting Started  
 Install and load the following packages:
 ```{r, eval=TRUE,echo=T,warning=FALSE, message=F}
 ## Install packages if needed
@@ -34,8 +29,13 @@ library(tidyr)
 library(ggplot2)
 
 # Read in FAO data
-fao<-read.csv(file = 'data/FAO_1950to2012_111014.csv',stringsAsFactors = F)
+fao<-read.csv(file = 'data/FAO_1950to2012_111914.csv',stringsAsFactors = F)
+asfis<-read.csv(file = 'data/ASFIS_Feb2014.csv',stringsAsFactors = F)
 load(file = 'data/DBdata_020215.Rdata')
+
+load(file = 'data/mpack.Rdata')
+lh<-mpack$lh
+rm(mpack)
 ```
 
 ### Why use dplyr and tidyr?
@@ -81,7 +81,9 @@ Dplyr and tidyr rely on the following main verbs:
     + `summarize()` summarize data into a single row of values  
     + `group_by()` group data by common variables for performing calculations
 
-Note that *unquoted* variable names are used in tidyr and dplyr functions. We'll use these verbs to process the raw FAO landings data into a more manageable format  
+Note that *unquoted* variable names are used in tidyr and dplyr functions. 
+
+We'll use these verbs to process the raw FAO landings data into a more manageable tidy format. Consider the following workflow:    
 ```{r, eval=F,echo=T}
 # Let's convert the fao data from it's current wide format to a long format using gather()
 df<-gather(fao,key='Year',value = 'Catch',starts_with('X')) # select all columns starting with X
@@ -94,60 +96,198 @@ df<-rename(df,country=Country..Country.,
            spgroup=Species..ISSCAAP.group.,
            spgroupname=Species..ISSCAAP.group..1,
            regionfao=Fishing.area..FAO.major.fishing.area.,
-           regionfaoname=Fishing.area..FAO.major.fishing.area..1,
            unit=Measure..Measure.,year=Year,catch=Catch)
 
 # get rid of the spgroup, regionfaoname, and unit columns
-df<-select(df,-spgroup,-regionfaoname,-unit)
+df<-select(df,-spgroup,-unit)
 
 # arrange entries by country, scientific name, fao region and year
 df<-arrange(df,country,sciname,regionfao,year)
 
+# strip the X off the front of all the year values and convert that variable to numeric
+df<-mutate(df,year=as.numeric(gsub(year,pattern = 'X', replacement = '')),
+                catch=as.numeric(gsub(catch,pattern = ' F', replacement = '')))
+
+# remove the "Totals" vales
+df<-filter(df,!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')))
+
+# print data frame
+df
+
 ```
 
-#### Piping and chaining code
-While the above workflow is perfectly acceptable, dplyr allows you to use the *pipe* operator to *chain* functions together. Chaining code allows you to streamline your workflow and make it easier to read.
+### Piping and chaining code
+While the above workflow is perfectly acceptable, dplyr allows you to use the *pipe* (`%>%`) operator to *chain* functions together. Chaining code allows you to streamline your workflow and make it easier to read.
 
 When using the `%>%` operator, first specify the data frame that all following functions will use. For the rest of the chain the data frame argument can be omitted from the remaining functions.
 
-Consider the same process as before only using pipes and a single chain:
+Now consider the same process as before only using pipes and a single dplyr chain:
 
 ```{r,eval=F,echo=T}
 
 df<- fao %>%
-  gather(key='Year',value = 'Catch',starts_with('X')) %>%
-  rename(country=Country..Country.,
+  gather(key='Year',value = 'Catch',starts_with('X')) %>% # convert to long format
+  rename(country=Country..Country., # rename columns
          commname=Species..ASFIS.species.,
-         sciname=Species..ASFIS.species..1,
-         spcode=Species..ASFIS.species..2,
+         spcode=Species..ASFIS.species..1,
+         sciname=Species..ASFIS.species..2,
          spgroup=Species..ISSCAAP.group.,
          spgroupname=Species..ISSCAAP.group..1,
          regionfao=Fishing.area..FAO.major.fishing.area.,
-         regionfaoname=Fishing.area..FAO.major.fishing.area..1,
          unit=Measure..Measure.,year=Year,catch=Catch) %>%
-  select(-spgroup,-regionfaoname,-unit) %>%
-  arrange(country,sciname,regionfao,year)
+  select(-spgroup,-unit) %>% # drop spgroup, regionfaoname, and unit variables
+  arrange(country,sciname,regionfao,year) %>% # order by country, sciname, regionfao, and year
+  mutate(year=as.numeric(gsub(year,pattern = 'X', replacement = '')), # strip X from years and convert to numeric
+         catch=as.numeric(gsub(catch,pattern = ' F', replacement = ''))) %>% # strip ' F' and convert to numeric
+  filter(!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)'))) # remove 'Totals' rows
+
+# print data frame
+df
 
 ```
 
-Before moving on we need to do some quick data cleaning
-```{r,eval=F,echo=T}
-# strip the X off the front of all the year values and convert that variable to numeric
-df$year<-as.numeric(gsub(df$year,pattern = 'X', replacement = ''))
+By chaining our code we were able to reproduce the same data frame without the need to continually overwrite it, and we can easily read each step in the process by observing the different verbs. We also only needed to reference the original dataframe (fao) at the beginning of the chain rather than in each function call.
 
-# remove the "Totals" vales
-df<-filter(df,!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')))
+### Joins
+So far we've been working with a single data frame, but dplyr provides a handful of really useful **join** functions that allow you to combine datasets in a variety of ways. To demonstrate the different methods of joining, we will combine our FAO dataset with a dataset of life history information from FishBase.
+
+Dplyr allows for *mutating* joins and *filtering* joins. Mutating joins will combine information from both data frames in different ways, while filtering joins will filter a single dataset based on matches in another data set.
+
+For joins to work, variable names must be the same in both datasets. This often requires using `rename()` prior to your join functions if you do not want to permenantly alter the variable names in each dataset.
+
+* Mutating joins
+    + `left_join(a, b, by = c('...'))` join matching rows from b to a by matching variables in vector  
+    + `right_join(a, b, by = c('...'))` join matching rows from a to b by matching variables in vector  
+    + `inner_join(a, b, by = c('...'))` join data, retaining only rows in both a and b  
+    + `full_join(a, b, by = c('...'))` join data, retaining all values, all rows
+    
+Lets use a left join to add the lifehistory parameters to our FAO data
+```{r,eval=F,echo=T}
+lh<-lh %>%
+  tbl_df() %>%
+  rename(sciname=sname) %>%
+  select(sciname,vbk,temp,maxl,agem) 
+  
+df %>% # note: we need to use the new name
+  left_join(lh) # we only need to specify the right hand data set to join lh with
 ```
 
-Here are a few more examples of chaining code to select, filter, and arrange datasets  
+## Analyzing and Manipulating Data  
+Now that we have our cleaned data in a tidy format let's do some analyses. First, here are a few more simple examples of chaining code to select, filter, and arrange our data to obtain different subsets. 
 
 ```{r,eval=F,echo=T}
-
-
+# Canada's fisheries from largest to smallest in 2012
 df %>%
   filter(country=='Canada' & year==2012) %>%
   select(year,country,commname,catch) %>%
-  arrange(catch)
+  arrange(desc(catch))
+
+# All fisheries in the Northwest Atlantic with a catch over 1000 MT
+df %>%
+  filter(regionfao==21 & year==2012 & catch>=1000) %>%
+  select(country,commname,regionfao,catch) %>%
+  arrange(desc(catch))
+
+# Which countries have the 10 largest shark fisheries?
+df %>%
+  filter(spgroupname=='Sharks, rays, chimaeras' & year==2012) %>%
+  select(country,commname,catch) %>%
+  arrange(desc(catch)) %>%
+  slice(1:10)
+
+```
+
+### Grouping and Summarizing Data  
+Dplyr uses two main verbs to analyze data, `summarize()` and `mutate()`. Summary functions will summarize data two produce a single row of output while mutate functions create a new variable the same length as the input data. For both functions, you first indicate the name of the variable that will be created and then specify the calculation to be peformed.  
+* Example: `totalcatch=sum(catch,na.rm=T)`
+
+![](sum_mutate.png)  
+
+The `group_by()` function lets you specify the level across which to apply your calculations.   
+* A key thing to remember is to always `ungroup()` your data if you intend to perform additional calculations, as grouped data frames can result in incorrect results downstream if performed at different levels.       
+
+![](group_by.png)
+
+Using `group_by()` and `summarize()` let's calculate total global harvest from 1950 to 2012 for several groups of data
+
+```{r,eval=F,echo=T}
+# Total global harvest
+global<-df %>%
+  group_by(year) %>%
+  summarize(totalcatch=sum(catch,na.rm=T))
+
+# Global harvest by country
+cntry<-df %>%
+  group_by(year,country) %>%
+  summarize(totalcatch=sum(catch, na.rm=T)) %>%
+  ungroup() %>% # -- Here's an example of why you need to ungroup! --
+  arrange(country)
+
+# Global harvest by species category
+spcatch<-df %>%
+  group_by(year,spgroupname) %>%
+  summarize(totalcatch=sum(catch, na.rm=T)) %>%
+  ungroup() %>% 
+  arrange(spgroupname)
+
+# USA harvest by species category over time
+usa<-df %>%
+  filter(country=='United States of America') %>%
+  group_by(year,country,spgroupname) %>%
+  summarize(totalcatch=sum(catch,na.rm=T)) %>%
+  ungroup() %>%
+  arrange(spgroupname)
+```
+
+Now let's use mutate to calculate some additional information for our datasets  
+```{r, eval=F,echo=T}
+# Calculate what % of global catch each country contributes in each year and for rank each year by that %
+cntry %>%
+  group_by(year) %>%
+  mutate(globalcatch=sum(totalcatch,na.rm=T),globalrank=dense_rank(totalcatch)) %>% # global catch and cntry rank
+  group_by(year,country) %>% # now we group by a different level before our next calculation
+  mutate(percglobal=100*(totalcatch/globalcatch)) %>%
+  group_by(country) %>%
+  mutate(ingrouprank=dense_rank(totalcatch))
+```  
+
+#### Underscore Functions  
+Before we apply the same process to the species group data let's write a function with dplyr to do it for us. Often, when writing these functions we want to be able to specify different grouping variables. But wait, dplyr arguments use unquoted variable names! Have no fear, underscore is here!
+
+Check out the following two functions
+
+```{r,eval=F,echo=T}
+# function using standard dplyr functions
+fun1<-function(x,gpvar1,gpvar2,gpvar3){
+  y<-x %>%
+    group_by(gpvar1) %>%
+    mutate(globalcatch=sum(totalcatch,na.rm=T),globalrank=dense_rank(totalcatch)) %>% # global catch and cntry rank
+    group_by(gpvar2) %>% # now we group by a different level before our next calculation
+    mutate(percglobal=100*(totalcatch/globalcatch)) %>%
+    group_by(gpvar3) %>%
+    mutate(ingrouprank=dense_rank(totalcatch))
+  return(y)
+}
+
+fun1(spcatch, gpvar1 = year, gpvar2 = c(year,country), gpvar3 = country) # !!!!! THIS WILL NOT WORK !!!!!
+
+# function using underscores
+fun1<-function(x,gpvar1,gpvar2,gpvar3){
+  y<-x %>%
+    group_by_(gpvar1) %>%
+    mutate(globalcatch=sum(totalcatch,na.rm=T),globalrank=dense_rank(totalcatch)) %>% 
+    group_by_(gpvar2) %>% 
+    mutate(percglobal=100*(totalcatch/globalcatch)) %>%
+    group_by_(gpvar3) %>%
+    mutate(ingrouprank=dense_rank(desc(totalcatch)))
+  return(y)
+}  
+
+# apply function to species category and country datasets
+spcatch<-fun1(spcatch,gpvar1 = c('year'), gpvar2 = c('year','spgroupname'), gpvar3 = c('spgroupname')) 
+cntry<-fun1(cntry,gpvar1 = c('year'), gpvar2 = c('year','country'), gpvar3 = c('country'))   
+```  
+
 
 
 The `df$spcode` variable actually consists of 5 individual parts. 
