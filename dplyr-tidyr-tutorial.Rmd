@@ -41,8 +41,13 @@ library(ggplot2)
 devtools::session_info()
 
 # Read in FAO data
+fao   <- read.csv(file = 'data/FAO_1950to2012_111914.csv', stringsAsFactors = F) 
+summary(fao)
+head(fao)
+# vs using read_csv
 fao   <- read_csv(file = 'data/FAO_1950to2012_111914.csv') 
-# note: read_csv like read.csv(...,stringsAsFactors = F)
+fao
+# note: read_csv like read.csv(...)
 #       also keeps original column names and converts to tbl_df()
 names(fao) = make.names(names(fao), unique=T) # since original column names have duplicates
 asfis <- read_csv(file = 'data/ASFIS_Feb2014.csv')
@@ -147,13 +152,16 @@ df <- fao %>%
   gather(key='Year',value = 'Catch',starts_with('X')) %>% # convert to long format
   rename(
     country     = Country..Country., # rename columns
+    #country     = `Country (Country)`, # backtick trick!
     commname    = Species..ASFIS.species.,
     spcode      = Species..ASFIS.species..1,
     sciname     = Species..ASFIS.species..2,
     spgroup     = Species..ISSCAAP.group.,
     spgroupname = Species..ISSCAAP.group..1,
     regionfao   = Fishing.area..FAO.major.fishing.area.,
-    unit        = Measure..Measure.,year=Year,catch=Catch) %>%
+    unit        = Measure..Measure.,
+    year        = Year,
+    catch       = Catch) %>%
   select(-spgroup,-unit) %>% # drop spgroup, regionfaoname, and unit variables
   arrange(country,sciname,regionfao,year) %>% # order by country, sciname, regionfao, and year
   mutate(
@@ -316,6 +324,19 @@ The `df$spcode` variable actually consists of 5 individual parts.
 ![](spcodes.png)
 
 
+## `bigrquery` test
+
+Need to setup Google account first, per [A new data processing workflow for R: dplyr, magrittr, tidyr, ggplot2 | Technical Tidbits From Spatial Analysis & Data Science](http://zevross.com/blog/2015/01/13/a-new-data-processing-workflow-for-r-dplyr-magrittr-tidyr-ggplot2/).
+
+```{r bigrquery, eval=F}
+library(dplyr)
+library(bigrquery) # install.packages('bigrquery')
+
+sql<-"select * from [publicdata:samples.shakespeare]"
+shakespeare <-query_exec(sql, project ="test-bigquery-1243",max_pages=Inf)
+```
+
+
 ## Resources
 
 - [Data wrangling cheatsheet (`dplyr`,`tidyr`)](http://ucsb-bren.github.io/refs/cheatsheets/data-wrangling-cheatsheet.pdf)
@@ -329,6 +350,9 @@ The `df$spcode` variable actually consists of 5 individual parts.
 - [tidyr vignette: Tidy data](https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html)
 - [Introduction to dplyr for Faster Data Manipulation in R](https://rpubs.com/justmarkham/dplyr-tutorial)
 - [Environmental Informatics | ucsb-bren/env-info](http://ucsb-bren.github.io/env-info/)
+- bigrquery tutorials:
+    - [A new data processing workflow for R: dplyr, magrittr, tidyr, ggplot2 | Technical Tidbits From Spatial Analysis & Data Science](http://zevross.com/blog/2015/01/13/a-new-data-processing-workflow-for-r-dplyr-magrittr-tidyr-ggplot2/) (newer)
+    - [Fetching BigQuery Data](http://dtkaplan.github.io/CVC/Data/Birthdays/Birthdays.html)
 
 ### Example Analyses
 

@@ -131,6 +131,7 @@ $(document).ready(function () {
 <li><a href="#analyzing-and-manipulating-data">Analyzing and Manipulating Data</a><ul>
 <li><a href="#grouping-and-summarizing-data">Grouping and Summarizing Data</a></li>
 </ul></li>
+<li><a href="#bigrquery-test"><code>bigrquery</code> test</a></li>
 <li><a href="#resources">Resources</a><ul>
 <li><a href="#example-analyses">Example Analyses</a></li>
 </ul></li>
@@ -177,7 +178,7 @@ devtools::session_info()</code></pre>
 ##  language (EN)                        
 ##  collate  en_US.UTF-8                 
 ##  tz       America/Los_Angeles         
-##  date     2016-03-06                  
+##  date     2016-03-07                  
 ## 
 ##  package    * version date       source        
 ##  assertthat   0.1     2013-12-06 CRAN (R 3.2.0)
@@ -206,8 +207,280 @@ devtools::session_info()</code></pre>
 ##  tidyr      * 0.4.1   2016-02-05 CRAN (R 3.2.3)
 ##  yaml         2.1.13  2014-06-12 CRAN (R 3.2.0)</code></pre>
 <pre class="r"><code># Read in FAO data
+fao   &lt;- read.csv(file = 'data/FAO_1950to2012_111914.csv', stringsAsFactors = F) 
+summary(fao)</code></pre>
+<pre><code>##  Country..Country.  Species..ASFIS.species. Species..ISSCAAP.group.
+##  Length:17692       Length:17692            Min.   :11.00          
+##  Class :character   Class :character        1st Qu.:33.00          
+##  Mode  :character   Mode  :character        Median :36.00          
+##                                             Mean   :37.38          
+##                                             3rd Qu.:38.00          
+##                                             Max.   :77.00          
+##  Species..ISSCAAP.group..1 Species..ASFIS.species..1
+##  Length:17692              Length:17692             
+##  Class :character          Class :character         
+##  Mode  :character          Mode  :character         
+##                                                     
+##                                                     
+##                                                     
+##  Species..ASFIS.species..2 Fishing.area..FAO.major.fishing.area.
+##  Length:17692              Min.   :18.00                        
+##  Class :character          1st Qu.:31.00                        
+##  Mode  :character          Median :37.00                        
+##                            Mean   :45.34                        
+##                            3rd Qu.:57.00                        
+##                            Max.   :88.00                        
+##  Measure..Measure.     X1950              X1951          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1952              X1953              X1954          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1955              X1956              X1957          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1958              X1959              X1960          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1961              X1962              X1963          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1964              X1965              X1966          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1967              X1968              X1969          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1970              X1971              X1972          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1973              X1974              X1975          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1976              X1977              X1978          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1979              X1980              X1981          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1982              X1983              X1984          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1985              X1986              X1987          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1988              X1989              X1990          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1991              X1992              X1993          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1994              X1995              X1996          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X1997              X1998              X1999          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X2000              X2001              X2002          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X2003              X2004              X2005          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X2006              X2007              X2008          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X2009              X2010              X2011          
+##  Length:17692       Length:17692       Length:17692      
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##     X2012          
+##  Length:17692      
+##  Class :character  
+##  Mode  :character  
+##                    
+##                    
+## </code></pre>
+<pre class="r"><code>head(fao)</code></pre>
+<pre><code>##   Country..Country.      Species..ASFIS.species. Species..ISSCAAP.group.
+## 1           Albania Angelsharks, sand devils nei                      38
+## 2           Albania              Atlantic bonito                      36
+## 3           Albania               Barracudas nei                      37
+## 4           Albania          Blue and red shrimp                      45
+## 5           Albania     Blue whiting(=Poutassou)                      32
+## 6           Albania                     Bluefish                      37
+##      Species..ISSCAAP.group..1 Species..ASFIS.species..1
+## 1      Sharks, rays, chimaeras                10903XXXXX
+## 2   Tunas, bonitos, billfishes                1750100101
+## 3 Miscellaneous pelagic fishes                17710001XX
+## 4              Shrimps, prawns                2280203101
+## 5        Cods, hakes, haddocks                1480403301
+## 6 Miscellaneous pelagic fishes                1702021301
+##   Species..ASFIS.species..2 Fishing.area..FAO.major.fishing.area.
+## 1               Squatinidae                                    37
+## 2               Sarda sarda                                    37
+## 3             Sphyraena spp                                    37
+## 4       Aristeus antennatus                                    37
+## 5  Micromesistius poutassou                                    37
+## 6       Pomatomus saltatrix                                    37
+##   Measure..Measure. X1950 X1951 X1952 X1953 X1954 X1955 X1956 X1957 X1958
+## 1 Quantity (tonnes)   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 2 Quantity (tonnes)   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 3 Quantity (tonnes)   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 4 Quantity (tonnes)   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 5 Quantity (tonnes)   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 6 Quantity (tonnes)   ...   ...   ...   ...   ...   ...   ...   ...   ...
+##   X1959 X1960 X1961 X1962 X1963 X1964 X1965 X1966 X1967 X1968 X1969 X1970
+## 1   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 2   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 3   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 4   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 5   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 6   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+##   X1971 X1972 X1973 X1974 X1975 X1976 X1977 X1978 X1979 X1980 X1981 X1982
+## 1   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 2   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 3   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 4   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 5   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 6   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+##   X1983 X1984 X1985 X1986 X1987 X1988 X1989 X1990 X1991 X1992 X1993 X1994
+## 1   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 2   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 3   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 4   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 5   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+## 6   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...   ...
+##   X1995 X1996 X1997 X1998 X1999 X2000 X2001 X2002 X2003 X2004 X2005 X2006
+## 1   0 0    53    20    31    30    30    16    79     1     4    68    55
+## 2     1     2   0 0    12    30    25    30    24     4     2    23    30
+## 3   ...   ...   ...   ...   ...     2   ...   ...   ...     2     4     7
+## 4   0 0     3   0 0     -     -     -     -    34    22    15    12    18
+## 5   0 0     2   0 0     -     -     -     -     6   ...     1     5     8
+## 6   ...   ...   ...   ...   ...   ...   ...   ...   ...     2     6     9
+##   X2007 X2008 X2009 X2010 X2011 X2012
+## 1    12    23    14    78    12     5
+## 2    19    27    21    23    12     5
+## 3   ...   ...   ...     7   ...   ...
+## 4   ...   ...   ...   ...   ...   ...
+## 5     -     -     -     -     -     -
+## 6     -     -     -     -     -     -</code></pre>
+<pre class="r"><code># vs using read_csv
 fao   &lt;- read_csv(file = 'data/FAO_1950to2012_111914.csv') 
-# note: read_csv like read.csv(...,stringsAsFactors = F)
+fao</code></pre>
+<pre><code>## Source: local data frame [17,692 x 71]
+## 
+##    Country (Country)      Species (ASFIS species) Species (ISSCAAP group)
+##                (chr)                        (chr)                   (int)
+## 1            Albania Angelsharks, sand devils nei                      38
+## 2            Albania              Atlantic bonito                      36
+## 3            Albania               Barracudas nei                      37
+## 4            Albania          Blue and red shrimp                      45
+## 5            Albania     Blue whiting(=Poutassou)                      32
+## 6            Albania                     Bluefish                      37
+## 7            Albania                        Bogue                      33
+## 8            Albania               Caramote prawn                      45
+## 9            Albania   Catsharks, nursehounds nei                      38
+## 10           Albania            Common cuttlefish                      57
+## ..               ...                          ...                     ...
+## Variables not shown: Species (ISSCAAP group) (chr), Species (ASFIS
+##   species) (chr), Species (ASFIS species) (chr), Fishing area (FAO major
+##   fishing area) (int), Measure (Measure) (chr), 1950 (chr), 1951 (chr),
+##   1952 (chr), 1953 (chr), 1954 (chr), 1955 (chr), 1956 (chr), 1957 (chr),
+##   1958 (chr), 1959 (chr), 1960 (chr), 1961 (chr), 1962 (chr), 1963 (chr),
+##   1964 (chr), 1965 (chr), 1966 (chr), 1967 (chr), 1968 (chr), 1969 (chr),
+##   1970 (chr), 1971 (chr), 1972 (chr), 1973 (chr), 1974 (chr), 1975 (chr),
+##   1976 (chr), 1977 (chr), 1978 (chr), 1979 (chr), 1980 (chr), 1981 (chr),
+##   1982 (chr), 1983 (chr), 1984 (chr), 1985 (chr), 1986 (chr), 1987 (chr),
+##   1988 (chr), 1989 (chr), 1990 (chr), 1991 (chr), 1992 (chr), 1993 (chr),
+##   1994 (chr), 1995 (chr), 1996 (chr), 1997 (chr), 1998 (chr), 1999 (chr),
+##   2000 (chr), 2001 (chr), 2002 (chr), 2003 (chr), 2004 (chr), 2005 (chr),
+##   2006 (chr), 2007 (chr), 2008 (chr), 2009 (chr), 2010 (chr), 2011 (chr),
+##   2012 (chr)</code></pre>
+<pre class="r"><code># note: read_csv like read.csv(...)
 #       also keeps original column names and converts to tbl_df()
 names(fao) = make.names(names(fao), unique=T) # since original column names have duplicates
 asfis &lt;- read_csv(file = 'data/ASFIS_Feb2014.csv')
@@ -322,13 +595,16 @@ df</code></pre>
   gather(key='Year',value = 'Catch',starts_with('X')) %&gt;% # convert to long format
   rename(
     country     = Country..Country., # rename columns
+    #country     = `Country (Country)`, # backtick trick!
     commname    = Species..ASFIS.species.,
     spcode      = Species..ASFIS.species..1,
     sciname     = Species..ASFIS.species..2,
     spgroup     = Species..ISSCAAP.group.,
     spgroupname = Species..ISSCAAP.group..1,
     regionfao   = Fishing.area..FAO.major.fishing.area.,
-    unit        = Measure..Measure.,year=Year,catch=Catch) %&gt;%
+    unit        = Measure..Measure.,
+    year        = Year,
+    catch       = Catch) %&gt;%
   select(-spgroup,-unit) %&gt;% # drop spgroup, regionfaoname, and unit variables
   arrange(country,sciname,regionfao,year) %&gt;% # order by country, sciname, regionfao, and year
   mutate(
@@ -475,6 +751,15 @@ cntry&lt;-fun1(cntry,gpvar1 = c('year'), gpvar2 = c('year','country'), gpvar3 = 
 </div>
 </div>
 </div>
+<div id="bigrquery-test" class="section level2">
+<h2><code>bigrquery</code> test</h2>
+<p>Need to setup Google account first, per <a href="http://zevross.com/blog/2015/01/13/a-new-data-processing-workflow-for-r-dplyr-magrittr-tidyr-ggplot2/">A new data processing workflow for R: dplyr, magrittr, tidyr, ggplot2 | Technical Tidbits From Spatial Analysis &amp; Data Science</a>.</p>
+<pre class="r"><code>library(dplyr)
+library(bigrquery) # install.packages('bigrquery')
+
+sql&lt;-&quot;select * from [publicdata:samples.shakespeare]&quot;
+shakespeare &lt;-query_exec(sql, project =&quot;test-bigquery-1243&quot;,max_pages=Inf)</code></pre>
+</div>
 <div id="resources" class="section level2">
 <h2>Resources</h2>
 <ul>
@@ -493,6 +778,11 @@ cntry&lt;-fun1(cntry,gpvar1 = c('year'), gpvar2 = c('year','country'), gpvar3 = 
 <li><a href="https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html">tidyr vignette: Tidy data</a></li>
 <li><a href="https://rpubs.com/justmarkham/dplyr-tutorial">Introduction to dplyr for Faster Data Manipulation in R</a></li>
 <li><a href="http://ucsb-bren.github.io/env-info/">Environmental Informatics | ucsb-bren/env-info</a></li>
+<li>bigrquery tutorials:
+<ul>
+<li><a href="http://zevross.com/blog/2015/01/13/a-new-data-processing-workflow-for-r-dplyr-magrittr-tidyr-ggplot2/">A new data processing workflow for R: dplyr, magrittr, tidyr, ggplot2 | Technical Tidbits From Spatial Analysis &amp; Data Science</a> (newer)</li>
+<li><a href="http://dtkaplan.github.io/CVC/Data/Birthdays/Birthdays.html">Fetching BigQuery Data</a></li>
+</ul></li>
 </ul>
 <div id="example-analyses" class="section level3">
 <h3>Example Analyses</h3>
