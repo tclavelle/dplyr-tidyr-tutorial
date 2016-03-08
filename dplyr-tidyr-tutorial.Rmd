@@ -10,29 +10,48 @@ output:
 ---
 
 ## Overview  
-This tutorial will cover the tidyr and dplyr packages created by the mythical code wizard [Hadley Wickham](https://github.com/hadley) of ggplot2 fame. The following topics will be covered:
+
+> Data scientists, according to interviews and expert estimates, spend from 50 percent to 80 percent of their time mired in the mundane labor of collecting and preparing data, before it can be explored for useful information. - [NYTimes (2014)](http://www.nytimes.com/2014/08/18/technology/for-big-data-scientists-hurdle-to-insights-is-janitor-work.html)
+
+This tutorial will cover the `tidyr` and `dplyr` packages created by the mythical code wizard [Hadley Wickham](https://github.com/hadley) of `ggplot2` fame. The "gg" in `ggplot2` stands for the "grammar of graphics". Hadley similarly considers the functionality of the two packages `dplyr` and `tidyr` to provide the "grammar of data manipulation". The following topics will be covered:
 
 ### References  
 + RStudio cheatsheet (now accessible via RStudio Help menu!)
++ Can [download RStudio](https://www.rstudio.com/products/rstudio/download/) if you don't have latest version `0.99.892` (menu RStudio -> About RStudio), which has many nice additions for running R chunks and providing table of contents in Rmarkdown documents.
 
 ### Getting Started  
 Install and load the following packages:
 ```{r, eval=TRUE,echo=T,warning=FALSE, message=F}
 ## Install packages if needed
-# install.packages(dplyr)
-# install.packages(tidyr)
-# install.packages(ggplot2)
+# install.packages('devtools')
+# install.packages('readr')
+# install.packages('dplyr')
+# install.packages('tidyr')
+# install.packages('stringr')
+# install.packages('ggplot2')
 
 # Load packages
+library(readr)
 library(dplyr)
 library(tidyr)
+library(stringr)
 library(ggplot2)
 
-# Read in FAO data
-fao<-read.csv(file = 'data/FAO_1950to2012_111914.csv',stringsAsFactors = F)
-asfis<-read.csv(file = 'data/ASFIS_Feb2014.csv',stringsAsFactors = F)
-load(file = 'data/DBdata_020215.Rdata')
+# Check package versions after Packages pane -> Update
+devtools::session_info()
 
+# Read in FAO data
+fao   <- read.csv(file = 'data/FAO_1950to2012_111914.csv', stringsAsFactors = F) 
+summary(fao)
+head(fao)
+# vs using read_csv
+fao   <- read_csv(file = 'data/FAO_1950to2012_111914.csv') 
+fao
+# note: read_csv like read.csv(...)
+#       also keeps original column names and converts to tbl_df()
+names(fao) = make.names(names(fao), unique=T) # since original column names have duplicates
+asfis <- read_csv(file = 'data/ASFIS_Feb2014.csv')
+load(file = 'data/DBdata_020215.Rdata')
 load(file = 'data/mpack.Rdata')
 lh<-mpack$lh
 rm(mpack)
@@ -60,6 +79,7 @@ fao<-tbl_df(fao) # convert to table data
 fao # now top 10 rows are shown along with data type of each variable. Variables that do not fit in console window are shown below.
 glimpse(fao) # view all columns 
 summary(fao)
+if (interactive()) View(fao) # interactive==T if in Console, not knitting
 ```
 
 ### Main verbs of dplyr and tidyr
@@ -86,9 +106,13 @@ Note that *unquoted* variable names are used in tidyr and dplyr functions.
 We'll use these verbs to process the raw FAO landings data into a more manageable tidy format. Consider the following workflow:    
 ```{r, eval=F,echo=T}
 # Let's convert the fao data from it's current wide format to a long format using gather()
-df<-gather(fao,key='Year',value = 'Catch',starts_with('X')) # select all columns starting with X
+df <- gather(fao, key='Year', value='Catch', num_range('X',1950:2012)) # ?select for num_range()
+# ! df() already a function in R, so d preferred
+if (interactive()) View(df) # interactive==T if in Console, not knitting
+# to handle: '-','...',' F','X'
 
 # Now let's rename the columns to more manageable names (new name=old name)
+# Note the use of backticks around column names with special characters like "("
 df<-rename(df,country=Country..Country.,
            commname=Species..ASFIS.species.,
            sciname=Species..ASFIS.species..1,
@@ -105,15 +129,15 @@ df<-select(df,-spgroup,-unit)
 df<-arrange(df,country,sciname,regionfao,year)
 
 # strip the X off the front of all the year values and convert that variable to numeric
-df<-mutate(df,year=as.numeric(gsub(year,pattern = 'X', replacement = '')),
-                catch=as.numeric(gsub(catch,pattern = ' F', replacement = '')))
+df <- mutate(df,
+             year  = as.numeric(str_replace(year, 'X', '')),
+             catch = as.numeric(str_replace(catch, c(' F','...','-'), replacement = '')))
 
 # remove the "Totals" vales
 df<-filter(df,!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')))
 
 # print data frame
 df
-
 ```
 
 ### Piping and chaining code
@@ -124,26 +148,30 @@ When using the `%>%` operator, first specify the data frame that all following f
 Now consider the same process as before only using pipes and a single dplyr chain:
 
 ```{r,eval=F,echo=T}
-
-df<- fao %>%
+df <- fao %>%
   gather(key='Year',value = 'Catch',starts_with('X')) %>% # convert to long format
-  rename(country=Country..Country., # rename columns
-         commname=Species..ASFIS.species.,
-         spcode=Species..ASFIS.species..1,
-         sciname=Species..ASFIS.species..2,
-         spgroup=Species..ISSCAAP.group.,
-         spgroupname=Species..ISSCAAP.group..1,
-         regionfao=Fishing.area..FAO.major.fishing.area.,
-         unit=Measure..Measure.,year=Year,catch=Catch) %>%
+  rename(
+    country     = Country..Country., # rename columns
+    #country     = `Country (Country)`, # backtick trick!
+    commname    = Species..ASFIS.species.,
+    spcode      = Species..ASFIS.species..1,
+    sciname     = Species..ASFIS.species..2,
+    spgroup     = Species..ISSCAAP.group.,
+    spgroupname = Species..ISSCAAP.group..1,
+    regionfao   = Fishing.area..FAO.major.fishing.area.,
+    unit        = Measure..Measure.,
+    year        = Year,
+    catch       = Catch) %>%
   select(-spgroup,-unit) %>% # drop spgroup, regionfaoname, and unit variables
   arrange(country,sciname,regionfao,year) %>% # order by country, sciname, regionfao, and year
-  mutate(year=as.numeric(gsub(year,pattern = 'X', replacement = '')), # strip X from years and convert to numeric
-         catch=as.numeric(gsub(catch,pattern = ' F', replacement = ''))) %>% # strip ' F' and convert to numeric
-  filter(!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)'))) # remove 'Totals' rows
-
+  mutate(
+    year  = as.numeric(str_replace(year, 'X', '')),  # strip X from years and convert to numeric
+    catch = as.numeric(str_replace(catch, c(' F','...','-'), replacement = '')))  %>% # strip ' F' and convert to numeric
+  filter(!country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')) %>% # remove 'Totals' rows
+  filter(!is.na(catch)) # rows: 1,114,596 -> 310,619
+  
 # print data frame
 df
-
 ```
 
 By chaining our code we were able to reproduce the same data frame without the need to continually overwrite it, and we can easily read each step in the process by observing the different verbs. We also only needed to reference the original dataframe (fao) at the beginning of the chain rather than in each function call.
@@ -169,7 +197,7 @@ lh<-lh %>%
   select(sciname,vbk,temp,maxl,agem) 
   
 df %>% # note: we need to use the new name
-  left_join(lh) # we only need to specify the right hand data set to join lh with
+  left_join(lh, by='sciname') # we only need to specify the right hand data set to join lh with
 ```
 
 ## Analyzing and Manipulating Data  
@@ -194,7 +222,6 @@ df %>%
   select(country,commname,catch) %>%
   arrange(desc(catch)) %>%
   slice(1:10)
-
 ```
 
 ### Grouping and Summarizing Data  
@@ -244,11 +271,15 @@ Now let's use mutate to calculate some additional information for our datasets
 # Calculate what % of global catch each country contributes in each year and for rank each year by that %
 cntry %>%
   group_by(year) %>%
-  mutate(globalcatch=sum(totalcatch,na.rm=T),globalrank=dense_rank(totalcatch)) %>% # global catch and cntry rank
+  mutate(
+    globalcatch = sum(totalcatch,na.rm=T),
+    globalrank  = dense_rank(totalcatch)) %>% # global catch and cntry rank
   group_by(year,country) %>% # now we group by a different level before our next calculation
-  mutate(percglobal=100*(totalcatch/globalcatch)) %>%
+  mutate(
+    percglobal = 100*(totalcatch/globalcatch)) %>%
   group_by(country) %>%
-  mutate(ingrouprank=dense_rank(totalcatch))
+  mutate(
+    ingrouprank = dense_rank(totalcatch))
 ```  
 
 #### Underscore Functions  
@@ -288,9 +319,43 @@ spcatch<-fun1(spcatch,gpvar1 = c('year'), gpvar2 = c('year','spgroupname'), gpva
 cntry<-fun1(cntry,gpvar1 = c('year'), gpvar2 = c('year','country'), gpvar3 = c('country'))   
 ```  
 
-
-
 The `df$spcode` variable actually consists of 5 individual parts. 
 
 ![](spcodes.png)
 
+
+## `bigrquery` test
+
+Need to setup Google account first, per [A new data processing workflow for R: dplyr, magrittr, tidyr, ggplot2 | Technical Tidbits From Spatial Analysis & Data Science](http://zevross.com/blog/2015/01/13/a-new-data-processing-workflow-for-r-dplyr-magrittr-tidyr-ggplot2/).
+
+```{r bigrquery, eval=F}
+library(dplyr)
+library(bigrquery) # install.packages('bigrquery')
+
+sql<-"select * from [publicdata:samples.shakespeare]"
+shakespeare <-query_exec(sql, project ="test-bigquery-1243",max_pages=Inf)
+```
+
+
+## Resources
+
+- [Data wrangling cheatsheet (`dplyr`,`tidyr`)](http://ucsb-bren.github.io/refs/cheatsheets/data-wrangling-cheatsheet.pdf)
+- [Data wrangling with R and RStudio](https://www.rstudio.com/resources/webinars/data-wrangling-with-r-and-rstudio/)
+    - [slides](http://ucsb-bren.github.io/env-info/wk03_dplyr/wrangling-webinar.pdf)
+- [dplyr vignette: Introduction to dplyr](https://cran.rstudio.com/web/packages/dplyr/vignettes/introduction.html)
+    - [Two-table verbs](https://cran.rstudio.com/web/packages/dplyr/vignettes/two-table.html)
+    - [Window functions and grouped mutate/filter](https://cran.rstudio.com/web/packages/dplyr/vignettes/window-functions.html)
+    - [Databases](https://cran.rstudio.com/web/packages/dplyr/vignettes/databases.html)
+    - [Non-standard evaluation](https://cran.rstudio.com/web/packages/dplyr/vignettes/nse.html)
+- [tidyr vignette: Tidy data](https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html)
+- [Introduction to dplyr for Faster Data Manipulation in R](https://rpubs.com/justmarkham/dplyr-tutorial)
+- [Environmental Informatics | ucsb-bren/env-info](http://ucsb-bren.github.io/env-info/)
+- bigrquery tutorials:
+    - [A new data processing workflow for R: dplyr, magrittr, tidyr, ggplot2 | Technical Tidbits From Spatial Analysis & Data Science](http://zevross.com/blog/2015/01/13/a-new-data-processing-workflow-for-r-dplyr-magrittr-tidyr-ggplot2/) (newer)
+    - [Fetching BigQuery Data](http://dtkaplan.github.io/CVC/Data/Birthdays/Birthdays.html)
+
+### Example Analyses
+
+- [NOAA Storm Data - a Brief Analysis of Impact on Health and Economy](http://rstudio-pubs-static.s3.amazonaws.com/25871_1ffdd88781bd4e6194d93fd327a25659.html)
+- [dplyr example with fish data](http://rpubs.com/dogle/31773) (more on [Introductory Fisheries Analysis with R | fishR](https://fishr.wordpress.com/ifar/))
+- [rnoaa - Access to NOAA National Climatic Data Center data](https://ropensci.org/blog/2014/03/13/rnoaa/)
