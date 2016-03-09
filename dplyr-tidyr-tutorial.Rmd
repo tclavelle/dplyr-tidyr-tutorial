@@ -2,11 +2,12 @@
 title: "Data wrangling with dplyr and tidyr"
 author: "Tyler Clavelle & Dan Ovando"
 date: "February 27, 2016"
-output: 
+output:
   html_document:
-    toc: true
     theme: spacelab
-
+    toc: yes
+  pdf_document:
+    toc: yes
 ---
 
 ## Overview  
@@ -15,12 +16,28 @@ output:
 
 This tutorial will cover the `tidyr` and `dplyr` packages created by the mythical code wizard [Hadley Wickham](https://github.com/hadley) of `ggplot2` fame. The "gg" in `ggplot2` stands for the "grammar of graphics". Hadley similarly considers the functionality of the two packages `dplyr` and `tidyr` to provide the "grammar of data manipulation". The following topics will be covered:
 
-### References  
-+ RStudio cheatsheet (now accessible via RStudio Help menu!)
-+ Can [download RStudio](https://www.rstudio.com/products/rstudio/download/) if you don't have latest version `0.99.892` (menu RStudio -> About RStudio), which has many nice additions for running R chunks and providing table of contents in Rmarkdown documents.
+### Resources  
+
+- [Data wrangling cheatsheet (`dplyr`,`tidyr`)](http://ucsb-bren.github.io/refs/cheatsheets/data-wrangling-cheatsheet.pdf)
+- [Data wrangling with R and RStudio](https://www.rstudio.com/resources/webinars/data-wrangling-with-r-and-rstudio/)
+    - [slides](http://ucsb-bren.github.io/env-info/wk03_dplyr/wrangling-webinar.pdf)
+- [dplyr vignette: Introduction to dplyr](https://cran.rstudio.com/web/packages/dplyr/vignettes/introduction.html)
+    - [Two-table verbs](https://cran.rstudio.com/web/packages/dplyr/vignettes/two-table.html)
+    - [Window functions and grouped mutate/filter](https://cran.rstudio.com/web/packages/dplyr/vignettes/window-functions.html)
+    - [Databases](https://cran.rstudio.com/web/packages/dplyr/vignettes/databases.html)
+    - [Non-standard evaluation](https://cran.rstudio.com/web/packages/dplyr/vignettes/nse.html)
+- [tidyr vignette: Tidy data](https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html)
+- [Introduction to dplyr for Faster Data Manipulation in R](https://rpubs.com/justmarkham/dplyr-tutorial)
+- [Environmental Informatics | ucsb-bren/env-info](http://ucsb-bren.github.io/env-info/)
+- bigrquery tutorials:
+    - [A new data processing workflow for R: dplyr, magrittr, tidyr, ggplot2 | Technical Tidbits From Spatial Analysis & Data Science](http://zevross.com/blog/2015/01/13/a-new-data-processing-workflow-for-r-dplyr-magrittr-tidyr-ggplot2/) (newer)
+    - [Fetching BigQuery Data](http://dtkaplan.github.io/CVC/Data/Birthdays/Birthdays.html)
 
 ### Getting Started  
-Install and load the following packages:
+
+You can [download RStudio](https://www.rstudio.com/products/rstudio/download/) if you don't have latest version `0.99.892` (menu RStudio -> About RStudio), which has many nice additions for running R chunks and providing table of contents in Rmarkdown documents.  
+
+Install and/or load the following packages:
 ```{r, eval=TRUE,echo=T,warning=FALSE, message=F}
 ## Install packages if needed
 # install.packages('devtools')
@@ -31,6 +48,7 @@ Install and load the following packages:
 # install.packages('ggplot2')
 
 # Load packages
+library(devtools)
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -39,22 +57,6 @@ library(ggplot2)
 
 # Check package versions after Packages pane -> Update
 devtools::session_info()
-
-# Read in FAO data
-fao   <- read.csv(file = 'data/FAO_1950to2012_111914.csv', stringsAsFactors = F) 
-summary(fao)
-head(fao)
-# vs using read_csv
-fao   <- read_csv(file = 'data/FAO_1950to2012_111914.csv') 
-fao
-# note: read_csv like read.csv(...)
-#       also keeps original column names and converts to tbl_df()
-names(fao) = make.names(names(fao), unique=T) # since original column names have duplicates
-asfis <- read_csv(file = 'data/ASFIS_Feb2014.csv')
-load(file = 'data/DBdata_020215.Rdata')
-load(file = 'data/mpack.Rdata')
-lh<-mpack$lh
-rm(mpack)
 ```
 
 ### Why use dplyr and tidyr?
@@ -66,10 +68,25 @@ rm(mpack)
 
 ## Basics of dplyr and tidyr  
 ### Data frames and data tables
-Although technically two separate packages, **dplyr** and **tidyr** were designed to work together and can basically be thought of as a single package. They are designed to work with data frames as is, but it is generally a good idea to convert data frames to table data using the `tbl_df()` function, particularly when working with large datasets.
+Although technically two separate packages, **dplyr** and **tidyr** were designed to work together and can basically be thought of as a single package. They are designed to work with data frames as is, but it is generally a good idea to convert your data to table data using the `read_csv()` or `tbl_df()` functions, particularly when working with large datasets.  
 
 ```{r, eval=F,echo=T}
-## Using the iris dataset, consider what happens with the following command
+## Comparing read.csv with read_csv
+# Read in FAO data
+fao   <- read.csv(file = 'data/FAO_1950to2012_111914.csv', stringsAsFactors = F) 
+summary(fao)
+head(fao)
+# vs using read_csv
+fao   <- read_csv(file = 'data/FAO_1950to2012_111914.csv') 
+fao
+# note: read_csv like read.csv(...)
+#       also keeps original column names and converts to tbl_df()
+names(fao) = make.names(names(fao), unique=T) # since original column names have duplicates
+
+asfis <- read_csv(file = 'data/ASFIS_Feb2014.csv')
+load(file = 'data/DBdata_020215.Rdata')
+
+## Consider what happens with the following command
 fao # all entries are printed in your console
 head(fao) # top five entries are printed in your console, columns wrap and can be difficult to follow if working with many variables
 summary(fao)
@@ -93,53 +110,113 @@ Dplyr and tidyr rely on the following main verbs:
     + `complete()` turns implicit missing values in explicit missing values by completing missing data combinations
 
 * Dplyr
-    + `arrange()` order rows by value of a column  
-    + `rename()` rename columns  
     + `filter()` subset data based on logical criteria  
     + `select()` select certain columns  
+    + `arrange()` order rows by value of a column  
+    + `rename()` rename columns  
+    + `group_by()` group data by common variables for performing calculations  
     + `mutate()` create a new variable/column  
     + `summarize()` summarize data into a single row of values  
-    + `group_by()` group data by common variables for performing calculations
 
-Note that *unquoted* variable names are used in tidyr and dplyr functions. 
+Note that *unquoted* variable names are used by default in tidyr and dplyr functions. 
 
-We'll use these verbs to process the raw FAO landings data into a more manageable tidy format. Consider the following workflow:    
+We'll use these verbs to process the raw FAO landings data into a more manageable tidy format.    
+
+  
+#### Gather and Spread  
+First let's convert the FAO data from the current wide format to a long format.
 ```{r, eval=F,echo=T}
-# Let's convert the fao data from it's current wide format to a long format using gather()
-df <- gather(fao, key='Year', value='Catch', num_range('X',1950:2012)) # ?select for num_range()
-# ! df() already a function in R, so d preferred
-if (interactive()) View(df) # interactive==T if in Console, not knitting
+# Let's convert the fao data from it's current wide format to a long format using gather(). Note the use of helper fnc
+d <- gather(fao, key='Year', value='Catch', num_range('X',1950:2012)) # ?select for num_range()
+
+# We can convert back to wide format with the spread function by calling the previously created variables
+spread(d,Year, Catch)
+
+if (interactive()) View(d) # interactive==T if in Console, not knitting
 # to handle: '-','...',' F','X'
-
-# Now let's rename the columns to more manageable names (new name=old name)
+```
+  
+  
+#### Rename  
+Now let's rename the columns to more manageable names (syntax is *new name* = *old name*)
+```{r, eval=F,echo=T}
 # Note the use of backticks around column names with special characters like "("
-df<-rename(df,country=Country..Country.,
-           commname=Species..ASFIS.species.,
-           sciname=Species..ASFIS.species..1,
-           spcode=Species..ASFIS.species..2,
-           spgroup=Species..ISSCAAP.group.,
-           spgroupname=Species..ISSCAAP.group..1,
-           regionfao=Fishing.area..FAO.major.fishing.area.,
-           unit=Measure..Measure.,year=Year,catch=Catch)
+d<-rename(d,
+          country     = Country..Country.,
+          commname    = Species..ASFIS.species.,
+          sciname     = Species..ASFIS.species..2,
+          spcode      = Species..ASFIS.species..1,
+          spgroup     = Species..ISSCAAP.group.,
+          spgroupname = Species..ISSCAAP.group..1,
+          regionfao   = Fishing.area..FAO.major.fishing.area.,
+          unit        = Measure..Measure.,
+          year        = Year,catch=Catch)
 
-# get rid of the spgroup, regionfaoname, and unit columns
-df<-select(df,-spgroup,-unit)
+```
+  
+  
+#### Select  
+Remove unwanted columns and observations.  
+```{r, eval=F, echo=T}
+# we could chose all the columns to keep
+select(d,country, commname, sciname, spcode, spgroupname, regionfao, year, catch)
 
-# arrange entries by country, scientific name, fao region and year
-df<-arrange(df,country,sciname,regionfao,year)
+# but it's easier to just specify the columns to get rid of
+d<-select(d,-spgroup,-unit)
+```
+  
+There are also a number of **helper functions** that can be used in conjunction with `select()` to let you select without individually listing all those you wish to keep or drop. We used a helper function previously in our `gather()` function and now we'll try a few others.  
+```{r,eval=F,echo=T}
+# select all coloumns that begin with the letter s
+select(d, starts_with('s'))
 
-# strip the X off the front of all the year values and convert that variable to numeric
-df <- mutate(df,
-             year  = as.numeric(str_replace(year, 'X', '')),
-             catch = as.numeric(str_replace(catch, c(' F','...','-'), replacement = '')))
+# select columns that match a regular expression
+select(d, matches('*name'))
 
-# remove the "Totals" vales
-df<-filter(df,!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')))
+# select columns between two columns by referencing their position like normal [,x:y] syntax 
+select(d, country, spcode:year)
 
-# print data frame
-df
+# select every column (though I haven't found a situation where this is useful yet...)
+select(d,everything())
+```
+  
+  
+#### Arrange  
+Arrange entries by country, scientific name, fao region and year. You can use `desc()` within `arrange()` to control which variables you want to order in ascending or descending fashion 
+```{r, eval=F,echo=T}
+# arrange by country, sciname, regionfao, and year
+d<-arrange(d,country,sciname,regionfao,year)
+
+# if we'd like the years to be descending
+arrange(d, country, desc(sciname), regionfao, desc(year))
+
+# if we want to first order by species
+arrange(d, sciname, country, regionfao, year)
+
+```
+  
+  
+#### Mutate  
+Mutate can be used to edit existing variables or create new ones.
+```{r, eval=F,echo=T}
+d <- mutate(d,
+             year      = as.numeric(str_replace(year, 'X', '')), # strip X off all year values and convert to numeric
+             catch     = as.numeric(str_replace(catch, c(' F','...','-'), replacement = '')),
+             logcatch  = log10(catch)) # create a  new variable of log catch
 ```
 
+  
+#### Filter  
+Remove unwanted columns and observations.
+```{r, eval=F, echo=T}
+# remove the "Totals" values and any years with NA catch values
+d<-filter(d,!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')) & !is.na(catch))
+
+# print data
+d
+```
+
+  
 ### Piping and chaining code
 While the above workflow is perfectly acceptable, dplyr allows you to use the *pipe* (`%>%`) operator to *chain* functions together. Chaining code allows you to streamline your workflow and make it easier to read.
 
@@ -148,8 +225,8 @@ When using the `%>%` operator, first specify the data frame that all following f
 Now consider the same process as before only using pipes and a single dplyr chain:
 
 ```{r,eval=F,echo=T}
-df <- fao %>%
-  gather(key='Year',value = 'Catch',starts_with('X')) %>% # convert to long format
+d <- fao %>%
+  gather(key='Year',value = 'Catch',num_range('X',1950:2012)) %>% # convert to long format
   rename(
     country     = Country..Country., # rename columns
     #country     = `Country (Country)`, # backtick trick!
@@ -165,17 +242,43 @@ df <- fao %>%
   select(-spgroup,-unit) %>% # drop spgroup, regionfaoname, and unit variables
   arrange(country,sciname,regionfao,year) %>% # order by country, sciname, regionfao, and year
   mutate(
-    year  = as.numeric(str_replace(year, 'X', '')),  # strip X from years and convert to numeric
-    catch = as.numeric(str_replace(catch, c(' F','...','-'), replacement = '')))  %>% # strip ' F' and convert to numeric
-  filter(!country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')) %>% # remove 'Totals' rows
-  filter(!is.na(catch)) # rows: 1,114,596 -> 310,619
+    year        = as.numeric(str_replace(year, 'X', '')), # strip X off all year values and convert to numeric
+    catch       = as.numeric(str_replace(catch, c(' F','...','-'), replacement = '')),
+    logcatch    = log10(catch)) %>% # create a  new variable of log catch 
+  filter(!country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)') & !is.na(catch)) # remove 'Totals' rows - rows: 1,114,596 -> 310,619
   
 # print data frame
-df
+d
 ```
-
+  
 By chaining our code we were able to reproduce the same data frame without the need to continually overwrite it, and we can easily read each step in the process by observing the different verbs. We also only needed to reference the original dataframe (fao) at the beginning of the chain rather than in each function call.
+  
+  
+#### Complete  
+Now our data is nice and tidy, but we realize that we actually want to retain NA values for years with missing catch data. We could just go back and remove the second argument from our `filter()` function. Or we could use the nifty `complete()` function to add in the missing combinations.  
 
+```{r,eval=F,echo=T}
+d<- d %>%
+  group_by(country,sciname,commname,regionfao) %>%
+  complete(year = 1950:2012, nesting(country,sciname,regionfao,commname,spgroupname,spcode)) 
+```
+  
+  
+#### Separate and Unite  
+The `df$spcode` variable actually consists of 5 individual parts. 
+
+![](spcodes.png)
+
+We decide we want to create a new column for each taxonomic division of the spcode. We can accomplish this with `separate()` and undue it with `unite()`
+```{r, eval=F,echo=T}
+# create new variables for each taxonomic component 
+d<-separate(d,spcode, into = c('maintaxa','order','family','genus','species'), sep = c(2,4,6,9))
+
+# recombine the columns with unite 
+d<-unite(d, col = spcode, maintaxa:species, sep = '') # Note - we can use helper functions here if needed
+```
+  
+  
 ### Joins
 So far we've been working with a single data frame, but dplyr provides a handful of really useful **join** functions that allow you to combine datasets in a variety of ways. To demonstrate the different methods of joining, we will combine our FAO dataset with a dataset of life history information from FishBase.
 
@@ -191,15 +294,30 @@ For joins to work, variable names must be the same in both datasets. This often 
     
 Lets use a left join to add the lifehistory parameters to our FAO data
 ```{r,eval=F,echo=T}
+# read in life history data
+load(file = 'data/mpack.Rdata')
+lh<-mpack$lh
+rm(mpack)
+
 lh<-lh %>%
   tbl_df() %>%
   rename(sciname=sname) %>%
   select(sciname,vbk,temp,maxl,agem) 
-  
-df %>% # note: we need to use the new name
-  left_join(lh, by='sciname') # we only need to specify the right hand data set to join lh with
+
+# left join to retain all data in our d data frame. We get additional rows because there are multiple lh entries for certain species
+d %>% 
+  left_join(lh, by = 'sciname') # we only need to specify the right hand data set to join lh with since we've piped
+
+# right join to keep all lh data.  
+d %>%
+  right_join(lh, by = 'sciname')
+
+# inner join to only keep data for which we have matches in both data sets
+d %>%
+  inner_join(lh, by = 'sciname')
 ```
 
+  
 ## Analyzing and Manipulating Data  
 Now that we have our cleaned data in a tidy format let's do some analyses. First, here are a few more simple examples of chaining code to select, filter, and arrange our data to obtain different subsets. 
 
@@ -224,13 +342,16 @@ df %>%
   slice(1:10)
 ```
 
-### Grouping and Summarizing Data  
+  
+### Grouping, Summarizing, and Mutating Data  
 Dplyr uses two main verbs to analyze data, `summarize()` and `mutate()`. Summary functions will summarize data two produce a single row of output while mutate functions create a new variable the same length as the input data. For both functions, you first indicate the name of the variable that will be created and then specify the calculation to be peformed.  
+
 * Example: `totalcatch=sum(catch,na.rm=T)`
 
 ![](sum_mutate.png)  
 
-The `group_by()` function lets you specify the level across which to apply your calculations.   
+The `group_by()` function lets you specify the level across which to apply your calculations. 
+
 * A key thing to remember is to always `ungroup()` your data if you intend to perform additional calculations, as grouped data frames can result in incorrect results downstream if performed at different levels.       
 
 ![](group_by.png)
@@ -266,6 +387,7 @@ usa<-df %>%
   arrange(spgroupname)
 ```
 
+
 Now let's use mutate to calculate some additional information for our datasets  
 ```{r, eval=F,echo=T}
 # Calculate what % of global catch each country contributes in each year and for rank each year by that %
@@ -282,10 +404,15 @@ cntry %>%
     ingrouprank = dense_rank(totalcatch))
 ```  
 
-#### Underscore Functions  
-Before we apply the same process to the species group data let's write a function with dplyr to do it for us. Often, when writing these functions we want to be able to specify different grouping variables. But wait, dplyr arguments use unquoted variable names! Have no fear, underscore is here!
+### Using Dplyr with `broom` and `ggplot2`
 
-Check out the following two functions
+**Dan insert work here**
+
+## Advanced Dplyr Applications
+### Underscore Functions  
+Often, when writing functions with dplyr we may want to be able to specify different grouping variables. But wait, dplyr arguments use unquoted variable names! Have no fear, underscore is here!
+
+Check out the following two functions:
 
 ```{r,eval=F,echo=T}
 # function using standard dplyr functions
@@ -319,12 +446,8 @@ spcatch<-fun1(spcatch,gpvar1 = c('year'), gpvar2 = c('year','spgroupname'), gpva
 cntry<-fun1(cntry,gpvar1 = c('year'), gpvar2 = c('year','country'), gpvar3 = c('country'))   
 ```  
 
-The `df$spcode` variable actually consists of 5 individual parts. 
 
-![](spcodes.png)
-
-
-## `bigrquery` test
+### Using Dplyr to Query External Databases
 
 Need to setup Google account first, per [A new data processing workflow for R: dplyr, magrittr, tidyr, ggplot2 | Technical Tidbits From Spatial Analysis & Data Science](http://zevross.com/blog/2015/01/13/a-new-data-processing-workflow-for-r-dplyr-magrittr-tidyr-ggplot2/).
 
@@ -337,24 +460,7 @@ shakespeare <-query_exec(sql, project ="test-bigquery-1243",max_pages=Inf)
 ```
 
 
-## Resources
-
-- [Data wrangling cheatsheet (`dplyr`,`tidyr`)](http://ucsb-bren.github.io/refs/cheatsheets/data-wrangling-cheatsheet.pdf)
-- [Data wrangling with R and RStudio](https://www.rstudio.com/resources/webinars/data-wrangling-with-r-and-rstudio/)
-    - [slides](http://ucsb-bren.github.io/env-info/wk03_dplyr/wrangling-webinar.pdf)
-- [dplyr vignette: Introduction to dplyr](https://cran.rstudio.com/web/packages/dplyr/vignettes/introduction.html)
-    - [Two-table verbs](https://cran.rstudio.com/web/packages/dplyr/vignettes/two-table.html)
-    - [Window functions and grouped mutate/filter](https://cran.rstudio.com/web/packages/dplyr/vignettes/window-functions.html)
-    - [Databases](https://cran.rstudio.com/web/packages/dplyr/vignettes/databases.html)
-    - [Non-standard evaluation](https://cran.rstudio.com/web/packages/dplyr/vignettes/nse.html)
-- [tidyr vignette: Tidy data](https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html)
-- [Introduction to dplyr for Faster Data Manipulation in R](https://rpubs.com/justmarkham/dplyr-tutorial)
-- [Environmental Informatics | ucsb-bren/env-info](http://ucsb-bren.github.io/env-info/)
-- bigrquery tutorials:
-    - [A new data processing workflow for R: dplyr, magrittr, tidyr, ggplot2 | Technical Tidbits From Spatial Analysis & Data Science](http://zevross.com/blog/2015/01/13/a-new-data-processing-workflow-for-r-dplyr-magrittr-tidyr-ggplot2/) (newer)
-    - [Fetching BigQuery Data](http://dtkaplan.github.io/CVC/Data/Birthdays/Birthdays.html)
-
-### Example Analyses
+#### Example Analyses
 
 - [NOAA Storm Data - a Brief Analysis of Impact on Health and Economy](http://rstudio-pubs-static.s3.amazonaws.com/25871_1ffdd88781bd4e6194d93fd327a25659.html)
 - [dplyr example with fish data](http://rpubs.com/dogle/31773) (more on [Introductory Fisheries Analysis with R | fishR](https://fishr.wordpress.com/ifar/))
