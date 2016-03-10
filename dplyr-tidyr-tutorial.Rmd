@@ -685,7 +685,7 @@ fun1<-function(x,gpvar1,gpvar2,gpvar3){
   return(y)
 }
 
-# fun1(spcatch, gpvar1 = year, gpvar2 = c(year,country), gpvar3 = country) # !!!!! THIS WILL NOT WORK !!!!!
+fun1(spcatch, gpvar1 = year, gpvar2 = c(year,country), gpvar3 = country) # !!!!! THIS WILL NOT WORK !!!!!
 
 # function using underscores
 fun1<-function(x,gpvar1,gpvar2,gpvar3){
@@ -712,9 +712,8 @@ Need to setup Google account first, per [A new data processing workflow for R: d
 ```{r bigrquery, eval=F}
 # library(dplyr)
 library(bigrquery) # install.packages('bigrquery')
-
 sql<-"select * from [publicdata:samples.shakespeare]"
-# shakespeare <-query_exec(sql, project ="test-bigquery-1243",max_pages=Inf)
+shakespeare <-query_exec(sql, project ="test-bigquery-1243",max_pages=Inf)
 ```
 
 
