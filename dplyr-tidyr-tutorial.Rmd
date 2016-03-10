@@ -562,7 +562,7 @@ hetsk_plot
 
 ```
 
-Looks a little iffy, we've got some heteroskedasticity going on, and the linear model we're using might not be quite right.  Let's try and see where it is. The great thing about `broom` is that it makes it really easy to manipulate data and plot diagnostics based on the original data. 
+Looks a little iffy, we've got some heteroskedasticity going on.  Let's try and see where it is. The great thing about `broom` is that it makes it really easy to manipulate data and plot diagnostics based on the original data. 
 
 ```{r, eval=F, echo=T}
 
@@ -579,7 +579,7 @@ hetsk_plot2
 
 ```
 
-So, we see here that the culprit are the herrings and salmons. That tells us to be a little cautious in our predictive ability based on this model, and maybe we need to do a better job of clustering our errors. Let's look at things another way. We saw from the coefficient plot that the region effects are the most significant in the model. How confident are we in those?
+So, we see here that the culprit are the herrings and salmons. That tells us to be a little cautious in our predictive ability and estimated errors based on this model, and maybe we need to do a better job of clustering our errors. Let's look at things another way. We saw from the coefficient plot that the region effects are the most significant in the model. How confident are we in those?
 
 ```{r, eval=F, echo=T}
 
