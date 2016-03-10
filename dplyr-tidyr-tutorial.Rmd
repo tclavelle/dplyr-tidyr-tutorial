@@ -471,14 +471,13 @@ class(regdat$regionfao) #whoops, it things FAO region is an integer, we want a f
 
 filtered_dat <- regdat %>%
   ungroup() %>%
-  mutate(regionfao = as.factor(regionfao),spgroupname = as.factor(spgroupname),
-         has_all = apply(is.na(regdat[,reg_vars]) == F, 1,all) ) %>%
-  filter(has_all == T)
+  mutate(has_all = apply(is.na(regdat[,reg_vars]) == F, 1,all)) %>%
+  filter(has_all == T) %>%
+  mutate(regionfao = as.factor(regionfao),spgroupname = as.factor(spgroupname))
 
 reg_fmla <- as.formula(paste('fishiness ~',paste(reg_vars, collapse = '+'), sep = '')) #create regression formula
 
-fish_model <- lm(reg_fmla, data = filtered_dat) #run a linear regression
-
+fish_model <- lm(reg_fmla, data = sample_n(filtered_dat, 10000, replace = T)) #run a linear regression
 summary(fish_model)
 
 ```
