@@ -324,7 +324,7 @@ combinations.
 
 The `df$spcode` variable actually consists of 5 individual parts.
 
-![](/README_files/spcodes.png)
+![](/downloads/spcodes.png)
 
 We decide we want to create a new column for each taxonomic division of
 the spcode. We can accomplish this with `separate()` and undue it with
