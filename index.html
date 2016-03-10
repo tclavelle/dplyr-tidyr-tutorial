@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Dplyr-tidyr-tutorial by tclavelle</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Dplyr-tidyr-tutorial</h1>
+          <h2>Tutorial on dplyr and tidyr packages for UCSB&#39;s Eco-Data-Science group</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/tclavelle/dplyr-tidyr-tutorial/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/tclavelle/dplyr-tidyr-tutorial/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/tclavelle/dplyr-tidyr-tutorial" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h2>
+<a id="overview" class="anchor" href="#overview" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Overview</h2>
+
+<blockquote>
+<p>Data scientists, according to interviews and expert estimates, spend
+from 50 percent to 80 percent of their time mired in the mundane labor
+of collecting and preparing data, before it can be explored for useful
+information. - <a href="http://www.nytimes.com/2014/08/18/technology/for-big-data-scientists-hurdle-to-insights-is-janitor-work.html">NYTimes
+(2014)</a></p>
+</blockquote>
+
+<p>This tutorial will cover the <code>tidyr</code> and <code>dplyr</code> packages created by the
+mythical code wizard <a href="https://github.com/hadley">Hadley Wickham</a> of
+<code>ggplot2</code> fame. The "gg" in <code>ggplot2</code> stands for the "grammar of
+graphics". Hadley similarly considers the functionality of the two
+packages <code>dplyr</code> and <code>tidyr</code> to provide the "grammar of data
+manipulation". The following topics will be covered:</p>
+
+<h3>
+<a id="resources" class="anchor" href="#resources" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Resources</h3>
+
+<ul>
+<li>  <a href="http://ucsb-bren.github.io/refs/cheatsheets/data-wrangling-cheatsheet.pdf">Data wrangling cheatsheet
+(<code>dplyr</code>,<code>tidyr</code>)</a>
+</li>
+<li>  <a href="https://www.rstudio.com/resources/webinars/data-wrangling-with-r-and-rstudio/">Data wrangling with R and
+RStudio</a>
+</li>
+<li>  <a href="http://ucsb-bren.github.io/env-info/wk03_dplyr/wrangling-webinar.pdf">slides</a>
+</li>
+<li>  <a href="https://cran.rstudio.com/web/packages/dplyr/vignettes/introduction.html">dplyr vignette: Introduction to
+dplyr</a>
+</li>
+<li>  <a href="https://cran.rstudio.com/web/packages/dplyr/vignettes/two-table.html">Two-table
+verbs</a>
+</li>
+<li>  <a href="https://cran.rstudio.com/web/packages/dplyr/vignettes/window-functions.html">Window functions and grouped
+mutate/filter</a>
+</li>
+<li>  <a href="https://cran.rstudio.com/web/packages/dplyr/vignettes/databases.html">Databases</a>
+</li>
+<li>  <a href="https://cran.rstudio.com/web/packages/dplyr/vignettes/nse.html">Non-standard
+evaluation</a>
+</li>
+<li>  <a href="https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html">tidyr vignette: Tidy
+data</a>
+</li>
+<li>  <a href="https://rpubs.com/justmarkham/dplyr-tutorial">Introduction to dplyr for Faster Data Manipulation in
+R</a>
+</li>
+<li>  <a href="http://ucsb-bren.github.io/env-info/">Environmental Informatics |
+ucsb-bren/env-info</a>
+</li>
+<li>  bigrquery tutorials:</li>
+<li>  <a href="http://zevross.com/blog/2015/01/13/a-new-data-processing-workflow-for-r-dplyr-magrittr-tidyr-ggplot2/">A new data processing workflow for R: dplyr, magrittr, tidyr,
+ggplot2 | Technical Tidbits From Spatial Analysis &amp; Data
+Science</a> (newer)</li>
+<li>  <a href="http://dtkaplan.github.io/CVC/Data/Birthdays/Birthdays.html">Fetching BigQuery
+Data</a>
+</li>
+</ul>
+
+<h3>
+<a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting Started</h3>
+
+<p>You can <a href="https://www.rstudio.com/products/rstudio/download/">download
+RStudio</a> if you
+don't have latest version <code>0.99.892</code> (menu RStudio -&gt; About RStudio),
+which has many nice additions for running R chunks and providing table
+of contents in Rmarkdown documents.</p>
+
+<p>Install and/or load the following packages:</p>
+
+<pre><code>## Install packages if needed
+# install.packages('devtools')
+# install.packages('readr')
+# install.packages('dplyr')
+# install.packages('tidyr')
+# install.packages('stringr')
+# install.packages('ggplot2')
+
+# Load packages
+library(devtools)
+library(readr)
+# library(plyr)
+library(dplyr)
+library(broom)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+
+# Check package versions after Packages pane -&gt; Update
+devtools::session_info()
+</code></pre>
+
+<h3>
+<a id="why-use-dplyr-and-tidyr" class="anchor" href="#why-use-dplyr-and-tidyr" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Why use dplyr and tidyr?</h3>
+
+<ol>
+<li> <strong>Speed</strong> - dplyr and tidyr are <em>really</em> fast<br>
+</li>
+<li> <strong>Readability</strong> - the code syntax is straightforward and easy to
+read<br>
+</li>
+<li> <strong>Chaining</strong> - <em>never break the chain</em>. More on this later<br>
+</li>
+<li> <strong>Integrates with ggplot2</strong> - plot your data in the same workflow
+that you manipulate it with</li>
+<li> <strong>Can be used to analyze external databases without knowledge of
+additional database query languages</strong>
+</li>
+</ol>
+
+<h2>
+<a id="basics-of-dplyr-and-tidyr" class="anchor" href="#basics-of-dplyr-and-tidyr" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Basics of dplyr and tidyr</h2>
+
+<h3>
+<a id="data-frames-and-data-tables" class="anchor" href="#data-frames-and-data-tables" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Data frames and data tables</h3>
+
+<p>Although technically two separate packages, <strong>dplyr</strong> and <strong>tidyr</strong> were
+designed to work together and can basically be thought of as a single
+package. They are designed to work with data frames as is, but it is
+generally a good idea to convert your data to table data using the
+<code>read_csv()</code> or <code>tbl_df()</code> functions, particularly when working with
+large datasets.</p>
+
+<pre><code>## Comparing read.csv with read_csv
+# Read in FAO data
+fao   &lt;- read.csv(file = 'data/FAO_1950to2012_111914.csv', stringsAsFactors = F) 
+summary(fao)
+head(fao)
+# vs using read_csv
+fao   &lt;- read_csv(file = 'data/FAO_1950to2012_111914.csv') 
+fao
+# note: read_csv like read.csv(...)
+#       also keeps original column names and converts to tbl_df()
+names(fao) = make.names(names(fao), unique=T) # since original column names have duplicates
+
+## Consider what happens with the following command
+# fao # all entries are printed in your console
+head(fao) # top five entries are printed in your console, columns wrap and can be difficult to follow if working with many variables
+summary(fao)
+
+## With dplyr
+fao&lt;-tbl_df(fao) # convert to table data
+fao # now top 10 rows are shown along with data type of each variable. Variables that do not fit in console window are shown below.
+glimpse(fao) # view all columns 
+summary(fao)
+if (interactive()) View(fao) # interactive==T if in Console, not knitting
+</code></pre>
+
+<h3>
+<a id="tidy-data" class="anchor" href="#tidy-data" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Tidy data</h3>
+
+<p>In general, it is good practice to have your data organized in a "tidy"
+format.</p>
+
+<p>In tidy data:</p>
+
+<ul>
+<li>  Each variable forms a column<br>
+</li>
+<li>  Each observation forms a row<br>
+</li>
+<li>  Each type of observational unit forms a table</li>
+</ul>
+
+<h3>
+<a id="main-verbs-of-dplyr-and-tidyr" class="anchor" href="#main-verbs-of-dplyr-and-tidyr" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Main verbs of dplyr and tidyr</h3>
+
+<p>Tidyr and dplyr are designed to help manipulate data sets, allowing you
+to convert between <em>wide</em> and <em>long</em> formats, fill in missing values and
+combinations, separate or merge multiple columns, rename and create new
+variables, and summarize data according to grouping variables.</p>
+
+<p>Dplyr and tidyr rely on the following main verbs:</p>
+
+<ul>
+<li>  Tidyr</li>
+<li>  <code>gather()</code> and <code>spread()</code> convert data between wide and long
+format<br>
+</li>
+<li>  <code>separate()</code> and <code>unite()</code> separate a single column into multiple
+columns and vice versa<br>
+</li>
+<li><p><code>complete()</code> turns implicit missing values in explicit missing
+values by completing missing data combinations</p></li>
+<li><p>Dplyr</p></li>
+<li>  <code>filter()</code> subset data based on logical criteria<br>
+</li>
+<li>  <code>select()</code> select certain columns<br>
+</li>
+<li>  <code>arrange()</code> order rows by value of a column<br>
+</li>
+<li>  <code>rename()</code> rename columns<br>
+</li>
+<li>  <code>group_by()</code> group data by common variables for performing
+calculations<br>
+</li>
+<li>  <code>mutate()</code> create a new variable/column<br>
+</li>
+<li>  <code>summarize()</code> summarize data into a single row of values</li>
+</ul>
+
+<p>Note that <em>unquoted</em> variable names are used by default in tidyr and
+dplyr functions.</p>
+
+<p>We'll use these verbs to process the raw FAO landings data into a more
+manageable tidy format.</p>
+
+<h4>
+<a id="gather-and-spread" class="anchor" href="#gather-and-spread" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Gather and Spread</h4>
+
+<p>First let's convert the FAO data from the current wide format to a long
+format.</p>
+
+<pre><code># Let's convert the fao data from it's current wide format to a long format using gather(). Note the use of helper fnc
+d &lt;- gather(fao, key='Year', value='Catch', num_range('X',1950:2012)) # ?select for num_range()
+
+# We can convert back to wide format with the spread function by calling the previously created variables
+spread(d,Year, Catch)
+
+if (interactive()) View(d) # interactive==T if in Console, not knitting
+# to handle: '-','...',' F','X'
+</code></pre>
+
+<h4>
+<a id="rename" class="anchor" href="#rename" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Rename</h4>
+
+<p>Now let's rename the columns to more manageable names (syntax is <em>new
+name</em> = <em>old name</em>)</p>
+
+<pre><code># Note the use of backticks around column names with special characters like "("
+d &lt;- dplyr::rename(d,
+          country     = Country..Country.,
+          commname    = Species..ASFIS.species.,
+          sciname     = Species..ASFIS.species..2,
+          spcode      = Species..ASFIS.species..1,
+          spgroup     = Species..ISSCAAP.group.,
+          spgroupname = Species..ISSCAAP.group..1,
+          regionfao   = Fishing.area..FAO.major.fishing.area.,
+          unit        = Measure..Measure.,
+          year        = Year,catch=Catch)
+</code></pre>
+
+<h4>
+<a id="select" class="anchor" href="#select" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Select</h4>
+
+<p>Remove unwanted columns and observations.</p>
+
+<pre><code># we could chose all the columns to keep
+select(d,country, commname, sciname, spcode, spgroupname, regionfao, year, catch)
+
+# but it's easier to just specify the columns to get rid of
+d&lt;-select(d,-spgroup,-unit)
+</code></pre>
+
+<p>There are also a number of <strong>helper functions</strong> that can be used in
+conjunction with <code>select()</code> to let you select without individually
+listing all those you wish to keep or drop. We used a helper function
+previously in our <code>gather()</code> function and now we'll try a few others.</p>
+
+<pre><code># select all coloumns that begin with the letter s
+select(d, starts_with('s'))
+
+# select columns that match a regular expression
+select(d, matches('*name'))
+
+# select columns between two columns by referencing their position like normal [,x:y] syntax 
+select(d, country, spcode:year)
+
+# select every column (though I haven't found a situation where this is useful yet...)
+select(d,everything())
+</code></pre>
+
+<h4>
+<a id="arrange" class="anchor" href="#arrange" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Arrange</h4>
+
+<p>Arrange entries by country, scientific name, fao region and year. You
+can use <code>desc()</code> within <code>arrange()</code> to control which variables you want
+to order in ascending or descending fashion</p>
+
+<pre><code># arrange by country, sciname, regionfao, and year
+d&lt;-arrange(d,country,sciname,regionfao,year)
+
+# if we'd like the years to be descending
+arrange(d, country, desc(sciname), regionfao, desc(year))
+
+# if we want to first order by species
+arrange(d, sciname, country, regionfao, year)
+</code></pre>
+
+<h4>
+<a id="mutate" class="anchor" href="#mutate" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Mutate</h4>
+
+<p>Mutate can be used to edit existing variables or create new ones.</p>
+
+<pre><code>d &lt;- mutate(d,
+            year      = as.numeric(str_replace(year, 'X', '')), # strip X off all year values and convert to numeric
+            catch     = as.numeric(str_replace(catch, c(' F','...','-'), replacement = '')),
+            logcatch  = log10(catch)) # create a  new variable of log catch
+</code></pre>
+
+<h4>
+<a id="filter" class="anchor" href="#filter" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Filter</h4>
+
+<p>Remove unwanted columns and observations.</p>
+
+<pre><code># remove the "Totals" values and any years with NA catch values
+d&lt;-filter(d,!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')) &amp; !is.na(catch))
+
+# print data
+d
+</code></pre>
+
+<h3>
+<a id="piping-and-chaining-code" class="anchor" href="#piping-and-chaining-code" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Piping and chaining code</h3>
+
+<p>While the above workflow is perfectly acceptable, dplyr allows you to
+use the <em>pipe</em> (<code>%&gt;%</code>) operator to <em>chain</em> functions together. Chaining
+code allows you to streamline your workflow and make it easier to read.</p>
+
+<p>When using the <code>%&gt;%</code> operator, first specify the data frame that all
+following functions will use. For the rest of the chain the data frame
+argument can be omitted from the remaining functions.</p>
+
+<p>Now consider the same process as before only using pipes and a single
+dplyr chain:</p>
+
+<pre><code>d &lt;- fao %&gt;%
+  gather(key='Year',value = 'Catch',num_range('X',1950:2012)) %&gt;% # convert to long format
+  rename(
+    country     = Country..Country., # rename columns
+    #country     = `Country (Country)`, # backtick trick!
+    commname    = Species..ASFIS.species.,
+    spcode      = Species..ASFIS.species..1,
+    sciname     = Species..ASFIS.species..2,
+    spgroup     = Species..ISSCAAP.group.,
+    spgroupname = Species..ISSCAAP.group..1,
+    regionfao   = Fishing.area..FAO.major.fishing.area.,
+    unit        = Measure..Measure.,
+    year        = Year,
+    catch       = Catch) %&gt;%
+  select(-spgroup,-unit) %&gt;% # drop spgroup, regionfaoname, and unit variables
+  arrange(country,sciname,regionfao,year) %&gt;% # order by country, sciname, regionfao, and year
+  mutate(
+    year        = as.numeric(str_replace(year, 'X', '')), # strip X off all year values and convert to numeric
+    catch       = as.numeric(gsub(catch, pattern=c(' F'), replacement = '', fixed = T)),
+    logcatch    = log10(catch)) %&gt;% # create a  new variable of log catch 
+  filter(!country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)') &amp; !is.na(catch)) # remove 'Totals' rows - rows: 1,114,596 -&gt; 310,619
+
+## Warning in eval(substitute(expr), envir, enclos): NAs introduced by
+## coercion
+
+# print data frame
+d
+</code></pre>
+
+<p>By chaining our code we were able to reproduce the same data frame
+without the need to continually overwrite it, and we can easily read
+each step in the process by observing the different verbs. We also only
+needed to reference the original data frame (fao) at the beginning of
+the chain rather than in each function call.</p>
+
+<h4>
+<a id="complete" class="anchor" href="#complete" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Complete</h4>
+
+<p>Now our data is nice and tidy, but we realize that we actually want to
+retain NA values for years with missing catch data. We could just go
+back and remove the second argument from our <code>filter()</code> function. Or we
+could use the nifty <code>complete()</code> function to add in the missing
+combinations.</p>
+
+<pre><code>d %&gt;%
+  complete(year = 1950:2012)
+
+d %&gt;%
+  group_by(country,sciname,commname,regionfao,spgroupname,spcode) %&gt;%
+  complete(year = 1950:2012) %&gt;%
+  ungroup()
+</code></pre>
+
+<h4>
+<a id="separate-and-unite" class="anchor" href="#separate-and-unite" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Separate and Unite</h4>
+
+<p>The <code>df$spcode</code> variable actually consists of 5 individual parts.</p>
+
+<p><img src="spcodes.png" alt=""></p>
+
+<p>We decide we want to create a new column for each taxonomic division of
+the spcode. We can accomplish this with <code>separate()</code> and undue it with
+<code>unite()</code></p>
+
+<pre><code># create new variables for each taxonomic component 
+d&lt;-separate(d,spcode, into = c('maintaxa','order','family','genus','species'), sep = c(2,4,6,9))
+
+# recombine the columns with unite 
+d&lt;-unite(d, col = spcode, maintaxa:species, sep = '') # Note - we can use helper functions here if needed
+</code></pre>
+
+<h3>
+<a id="joins" class="anchor" href="#joins" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Joins</h3>
+
+<p>So far we've been working with a single data frame, but dplyr provides a
+handful of really useful <strong>join</strong> functions that allow you to combine
+datasets in a variety of ways. To demonstrate the different methods of
+joining, we will combine our FAO dataset with a dataset of life history
+information from FishBase.</p>
+
+<p>Dplyr allows for <em>mutating</em> joins and <em>filtering</em> joins. Mutating joins
+will combine information from both data frames in different ways, while
+filtering joins will filter a single dataset based on matches in another
+data set.</p>
+
+<p>For joins to work, variable names must be the same in both datasets.
+This often requires using <code>rename()</code> prior to your join functions if you
+do not want to permanently alter the variable names in each dataset.</p>
+
+<ul>
+<li>  Mutating joins</li>
+<li>  <code>left_join(a, b, by = c('...'))</code> join matching rows from b to a by
+matching variables in vector<br>
+</li>
+<li>  <code>right_join(a, b, by = c('...'))</code> join matching rows from a to b by
+matching variables in vector<br>
+</li>
+<li>  <code>inner_join(a, b, by = c('...'))</code> join data, retaining only rows in
+both a and b<br>
+</li>
+<li>  <code>full_join(a, b, by = c('...'))</code> join data, retaining all values,
+all rows</li>
+</ul>
+
+<p>Lets use join functions to explore adding life history parameters to our
+FAO data</p>
+
+<pre><code># read in life history data
+load(file = 'data/mpack.Rdata')
+lh&lt;-mpack$lh
+rm(mpack)
+
+lh&lt;-lh %&gt;%
+  tbl_df() %&gt;%
+  dplyr::rename(sciname=sname) %&gt;% # rename to sciname for joining
+  select(sciname,vbk,temp,maxl,agem) %&gt;% # select variables we wish to add
+  slice(match(unique(lh$sname),lh$sname))
+
+# first let's pull out all species US fisheries
+us&lt;- d %&gt;%
+  ungroup() %&gt;%
+  filter(country=='United States of America' &amp; year==2012) %&gt;%
+  select(country, sciname, commname, spgroupname) %&gt;%
+  distinct()
+
+# left join to retain all data in our d data frame. 
+us %&gt;% 
+  left_join(lh, by = 'sciname') # we only need to specify the right hand data set to join lh with since we've piped
+
+# right join to keep all lh data.  
+us %&gt;%
+  right_join(lh, by = 'sciname')
+
+# inner join to only keep data for which we have matches in both data sets
+us %&gt;%
+  inner_join(lh, by = 'sciname')
+
+# full join to keep all data for both data sets
+us %&gt;%
+  full_join(lh, by = 'sciname')
+</code></pre>
+
+<h2>
+<a id="analyzing-and-manipulating-data" class="anchor" href="#analyzing-and-manipulating-data" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Analyzing and Manipulating Data</h2>
+
+<p>Now that we have our cleaned data in a tidy format let's do some
+analyses. First, here are a few more simple examples of chaining code to
+select, filter, and arrange our data to obtain different subsets.</p>
+
+<pre><code># Canada's fisheries from largest to smallest in 2012
+d %&gt;%
+  filter(country=='Canada' &amp; year==2012) %&gt;%
+  select(year,country,commname,catch) %&gt;%
+  arrange(desc(catch))
+
+# All fisheries in the Northwest Atlantic with a catch over 1000 MT
+d %&gt;%
+  filter(regionfao==21 &amp; year==2012 &amp; catch&gt;=1000) %&gt;%
+  select(country,commname,regionfao,catch) %&gt;%
+  arrange(desc(catch))
+
+# Which countries have the 10 largest shark fisheries?
+d %&gt;%
+  filter(spgroupname=='Sharks, rays, chimaeras' &amp; year==2012) %&gt;%
+  select(country,commname,catch) %&gt;%
+  arrange(desc(catch)) %&gt;%
+  slice(1:10)
+</code></pre>
+
+<h3>
+<a id="grouping-summarizing-and-mutating-data" class="anchor" href="#grouping-summarizing-and-mutating-data" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Grouping, Summarizing, and Mutating Data</h3>
+
+<p>Dplyr uses two main verbs to analyze data, <code>summarize()</code> and <code>mutate()</code>.
+Summary functions will summarize data two produce a single row of output
+while mutate functions create a new variable the same length as the
+input data. For both functions, you first indicate the name of the
+variable that will be created and then specify the calculation to be
+performed.</p>
+
+<ul>
+<li>  Example: <code>totalcatch=sum(catch,na.rm=T)</code>
+</li>
+</ul>
+
+<p><img src="sum_mutate.png" alt=""></p>
+
+<p>The <code>group_by()</code> function lets you specify the level across which to
+apply your calculations.</p>
+
+<ul>
+<li>  A key thing to remember is to always <code>ungroup()</code> your data if you
+intend to perform additional calculations, as grouped data frames
+can result in incorrect results downstream if performed at
+different levels.</li>
+</ul>
+
+<p><img src="group_by.png" alt=""></p>
+
+<p>Using <code>group_by()</code> and <code>summarize()</code> let's calculate total global
+harvest from 1950 to 2012 for several groups of data</p>
+
+<pre><code># Total global harvest
+global &lt;- d %&gt;%
+  ungroup() %&gt;%
+  group_by(year) %&gt;%
+  dplyr::summarize(totalcatch=sum(catch,na.rm=T)) %&gt;%
+  ggplot(aes(x=year,y=totalcatch)) +
+  geom_line()
+
+# Global harvest by country
+cntry&lt;-d %&gt;%
+  group_by(year,country) %&gt;%
+  dplyr::summarize(totalcatch=sum(catch, na.rm=T)) %&gt;%
+  ungroup() %&gt;% # -- Here's an example of why you need to ungroup! --
+  dplyr::arrange(country)
+
+# Global harvest by species category
+spcatch &lt;- d %&gt;%
+  group_by(year,spgroupname) %&gt;%
+  dplyr::summarize(totalcatch=sum(catch, na.rm=T)) %&gt;%
+  ungroup() %&gt;% 
+  arrange(spgroupname)
+
+# USA harvest by species category over time
+usa&lt;- d %&gt;%
+  filter(country=='United States of America') %&gt;%
+  group_by(year,country,spgroupname) %&gt;%
+  dplyr::summarize(totalcatch=sum(catch,na.rm=T)) %&gt;%
+  ungroup() %&gt;%
+  arrange(spgroupname)
+</code></pre>
+
+<p>Now let's use mutate to calculate some additional information for our
+datasets</p>
+
+<pre><code># Calculate what % of global catch each country contributes in each year and for rank each year by that %
+cntry %&gt;%
+  group_by(year) %&gt;%
+  mutate(
+    globalcatch = sum(totalcatch,na.rm=T),
+    globalrank  = dense_rank(totalcatch)) %&gt;% # global catch and cntry rank
+  group_by(year,country) %&gt;% # now we group by a different level before our next calculation
+  mutate(
+    percglobal = 100*(totalcatch/globalcatch)) %&gt;%
+  group_by(country) %&gt;%
+  mutate(
+    ingrouprank = dense_rank(totalcatch))
+</code></pre>
+
+<h3>
+<a id="using-dplyr-with-broom-and-ggplot2" class="anchor" href="#using-dplyr-with-broom-and-ggplot2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using Dplyr with <code>broom</code> and <code>ggplot2</code>
+</h3>
+
+<p>One of the best aspects of working with tidy data and <code>dplyr</code> is how
+easy it makes it to quickly manipulate and plot your data. Property
+organized, it's a piece of cake to quickly make summaries and plots of
+your data without making all kinds of "temporary" files or lines of
+spaghetti code for plotting. You can also basically eliminate loops from
+your coding for all situations except that those that require dynamic
+updating (e.g. population models).</p>
+
+<p>For this next exercise, we're going to use <code>tidyr</code>, <code>dplyr</code>, <code>broom</code>,
+and <code>ggplot2</code> to fit a model, run diagnostics, and plot results.</p>
+
+<p>It's 3am. You've been chasing the same cryptic error message for two
+days (
+<code>Error: towel not found, don't panic!</code>). You decide enough is
+enough: you're going to pack it in, buy a boat and become a fisherman.
+The only problem is, years of coding have left you with no knowledge of
+the outside world besides what R and data can tell you. How are you
+supposed to know what to fish for, or where to fish? Luckily, you have
+some data, so you turn to your laptop one last time before hurling it
+off of a cliff in a ritualistic sacrifice to the sea gods.</p>
+
+<p>You want to find a fishery to join based on two criteria: high average
+catch, and low average variability. You might now know these data
+though, so you want to be able to predict what fishery to join based on
+geographic and life history traits.</p>
+
+<p>Our first goals:</p>
+
+<ol>
+<li><p>Generate a unique ID for each fishery</p></li>
+<li><p>Calculate the mean log lifetime catch of each fishery</p></li>
+<li><p>Calculate the coefficient of variation of each fishery</p></li>
+<li><p>Filter out fisheries with short time series</p></li>
+</ol>
+
+
+
+<pre><code># Prep our data
+dat &lt;- d %&gt;%
+  ungroup() %&gt;% #Often a good idea to ungroup before starting something new
+  mutate(id = paste(country,spcode,regionfao, sep = '_')) %&gt;% #Generate a unique ID for each fishery
+  group_by(id) %&gt;%
+  mutate(mean_log_catch = mean(logcatch, na.rm = T), cv_log_catch = sd(logcatch, na.rm = T)/mean(logcatch, na.rm = T), length_catch = sum(is.na(logcatch) == F &amp; logcatch &gt;0)) %&gt;% # we want to keep some of the other data as well
+  filter(year == max(year) &amp; length_catch &gt; 10 &amp; is.finite(mean_log_catch) == T &amp; cv_log_catch &gt;0) %&gt;% # We don't want repeated entries, so let's just grab one random year
+  dplyr::select(-year, -catch, -logcatch)
+
+# Always plot!
+ggplot(dat, aes(mean_log_catch,cv_log_catch)) + 
+  geom_point()
+</code></pre>
+
+<p><img src="README_files/figure-markdown_strict/unnamed-chunk-17-1.png" alt="">&lt;!-- --&gt;</p>
+
+<p>OK, we see we're onto something here: there's clearly a relationship
+between average catch and the CV of the catch. We want to build a model
+that predicts that. Let's create a composite score of the mean log catch
+and the inverse of the CV. We're going to scale the log catches by the
+maximum log catch, and the CV by the the maximum of 1/CV. We also want
+to add in our nice life history data</p>
+
+<pre><code>regdat &lt;-  dat %&gt;%
+  ungroup() %&gt;% #we want global statistics now
+  mutate(scaled_ml_catch = mean_log_catch/max(mean_log_catch), scaled_cv_catch =  (cv_log_catch/min(cv_log_catch))^-1, fishiness = scaled_ml_catch + scaled_cv_catch) %&gt;%
+  left_join(lh, by = 'sciname')
+
+regplot &lt;- regdat %&gt;% #great thing about ggplot is the ability to save as an object and use and modify later
+  ggplot(aes(mean_log_catch,cv_log_catch, fill = fishiness)) + 
+  geom_point(shape = 21) + 
+  scale_fill_gradient(low = 'red',high = 'green')
+
+regplot # grea
+</code></pre>
+
+<p><img src="README_files/figure-markdown_strict/unnamed-chunk-18-1.png" alt="">&lt;!-- --&gt;</p>
+
+<p>Now we're getting somewhere! Now, lets run a regression using life
+history and geographic variables to try and predict the quality of
+fishing.</p>
+
+<pre><code>reg_vars &lt;- c('regionfao', 'spgroupname', 'vbk','maxl','temp') #specify variables you want
+
+class(regdat$regionfao) #whoops, it things FAO region is an integer, we want a factor
+
+filtered_dat &lt;- regdat %&gt;%
+  ungroup() %&gt;%
+  mutate(has_all = apply(is.na(regdat[,reg_vars]) == F, 1,all)) %&gt;%
+  filter(has_all == T) %&gt;%
+  mutate(regionfao = as.factor(regionfao),spgroupname = as.factor(spgroupname))
+
+reg_fmla &lt;- as.formula(paste('fishiness ~',paste(reg_vars, collapse = '+'), sep = '')) #create regression formula
+
+fish_model &lt;- lm(reg_fmla, data = sample_n(filtered_dat, 10000, replace = T)) #run a linear regression
+summary(fish_model)
+</code></pre>
+
+<p>Now we've got a model! we're close to being able to use data to predict
+where we'll start our fishing operation. But, while we know nothing
+about fishing, we are good statisticians, and we know we should look at
+our regression before using it to make a big life decision. This is
+where <code>broom</code> comes in. R has all kinds of great functions, like
+<code>summary()</code> to look at regressions. But, they can be a little ad hoc,
+and difficult to manipulate. <code>broom</code> helps us tidy up our regression
+data. First, suppose that we want a better way to look at summary
+statistics from the regression. The <code>glance()</code> function from the <code>broom</code>
+package extracts important summary statistics from the model, like the
+<em>R<sup>2</sup></em>, the AIC, and the BIC.</p>
+
+<pre><code>library(broom)
+reg_summary &lt;- glance(fish_model)
+
+reg_summary
+</code></pre>
+
+<p>Unfortunately, our model is pretty poor; it only explains ~20% of the
+variation in the <code>fishiness</code> variable, but hopefully it's better than
+guessing. Let's dig into this model a bit more. We're going to use the
+<code>tidy()</code> function from the <code>broom</code> package to provide neat summaries of
+the model coefficients.</p>
+
+<pre><code>tidy_model &lt;- tidy(fish_model)
+
+tidy_model$variable&lt;- as.factor(tidy_model$term) #convert terms to factors
+
+tidy_model$variable &lt;- reorder(tidy_model$variable, tidy_model$p.value) #sort variables by pvalue
+
+tidy_model$short_pval&lt;- pmin(tidy_model$p.value,0.2) #create abbreviated version
+
+regression_plot &lt;- (ggplot(data=tidy_model,aes(x=variable,y=estimate,fill=short_pval))+
+                      geom_bar(position='dodge',stat='identity',color='black')+
+                      scale_fill_gradient2(high='black',mid='gray99',low='red',midpoint=0.1,
+                                           breaks=c(0.05,0.1,0.15,0.2),labels=c('0.05','0.10','0.15','&gt;0.20')
+                                           ,name='P-Value',guide=guide_colorbar(reverse=T))
+                    +theme(axis.text.x=element_text(angle=45,hjust=0.9,vjust=0.9))+
+                      geom_errorbar(mapping=aes(ymin=estimate-1.96*std.error,ymax=estimate+1.96*std.error))+
+                      xlab('Variable')+
+                      ylab(paste('Marginal Effect on ',names(fish_model$model)[1],sep='')) + 
+                      coord_flip())
+
+regression_plot
+</code></pre>
+
+<p><img src="README_files/figure-markdown_strict/unnamed-chunk-21-1.png" alt="">&lt;!-- --&gt;</p>
+
+<p>So, we can now see that most of the significant terms are region
+specific, and the life history data doesn't give us a whole lot of
+information on where we should start fishing. So far, the model is
+saying go fish in China, and maybe avoid salmons, halibuts, and tunas.</p>
+
+<p>Before we charge off and use these results though to decide where we're
+starting our new life, we're now going to use the <code>augment()</code> function
+in the <code>broom</code> package to help us run some diagnostics on the
+regression. The <code>augment</code> function takes our original data passed to the
+regression, and adds all kinds of things, like the values predicted by
+the model and the residuals. This makes it very useful for regression
+diagnostics. First off, we might want to check whether our errors are
+actually normally distributed</p>
+
+<pre><code>auged_reg &lt;- augment(fish_model)
+
+
+obs_v_pred &lt;- auged_reg %&gt;%
+  ggplot(aes(fishiness, .fitted)) + 
+  geom_point(shape = 21, size = 4, alpha = 0.6, fill = 'steelblue4') + 
+  geom_abline(aes(slope=1, intercept = 0)) + 
+  xlab('ovbserved') + 
+  ylab('predicted') + 
+  geom_label(aes(0.25,0.7), label = paste('R2 = ', round(reg_summary$r.squared,2), sep = ''))
+
+obs_v_pred
+</code></pre>
+
+<p><img src="README_files/figure-markdown_strict/unnamed-chunk-22-1.png" alt="">&lt;!-- --&gt;</p>
+
+<pre><code>  qq_plot &lt;- auged_reg %&gt;% #create quantile-quantile plot
+    ggplot(aes(sample = .resid)) +
+    stat_qq(shape = 21, size = 4, alpha = 0.6, fill = 'steelblue4') +
+    xlab('Theoretical') +
+    ylab('Sample')
+
+  qq_plot
+</code></pre>
+
+<p><img src="README_files/figure-markdown_strict/unnamed-chunk-22-2.png" alt="">&lt;!-- --&gt;</p>
+
+<p>We see that our data are in fact normally distributed, that's good!
+Let's check for heteroskedasticity and model misspecification.</p>
+
+<pre><code>  hetsk_plot &lt;- auged_reg %&gt;% #plot fitted vs residuals
+    ggplot(aes(.fitted, .resid)) +
+    geom_point(shape = 21, size = 4, alpha = 0.6, fill = 'steelblue4') +
+  geom_hline(aes(yintercept = 0)) + 
+    xlab('Predicted') +
+    ylab('Residuals')
+
+hetsk_plot
+</code></pre>
+
+<p>Looks a little iffy, we've got some heteroskedasticity going on. Let's
+try and see where it is. The great thing about <code>broom</code> is that it makes
+it really easy to manipulate data and plot diagnostics based on the
+original data.</p>
+
+<pre><code>  hetsk_plot2 &lt;- auged_reg %&gt;% 
+    ggplot(aes(.fitted, .resid, fill = spgroupname)) +
+    geom_point(shape = 21, size = 4, alpha = 0.6) +
+  geom_hline(aes(yintercept = 0)) + 
+    xlab('Predicted') +
+    ylab('Residuals')
+
+hetsk_plot2
+</code></pre>
+
+<p><img src="README_files/figure-markdown_strict/unnamed-chunk-24-1.png" alt="">&lt;!-- --&gt;</p>
+
+<p>So, we see here that the culprit are the herrings and salmons. That
+tells us to be a little cautious in our predictive ability and estimated
+errors based on this model, and maybe we need to do a better job of
+clustering our errors. Let's look at things another way. We saw from the
+coefficient plot that the region effects are the most significant in the
+model. How confident are we in those?</p>
+
+<pre><code>  regional_bias &lt;- auged_reg %&gt;% #Check residuals by group
+  ggplot(aes(regionfao,.resid)) + 
+  geom_boxplot(fill = 'steelblue4') + 
+  geom_hline(aes(yintercept = 0)) + 
+  xlab('FAO Region') + 
+  ylab('Residuals')
+
+regional_bias
+</code></pre>
+
+<p><img src="README_files/figure-markdown_strict/unnamed-chunk-25-1.png" alt="">&lt;!-- --&gt;</p>
+
+<pre><code>  species_bias &lt;- auged_reg %&gt;%
+  ggplot(aes(spgroupname,.resid)) + 
+  geom_boxplot(fill = 'steelblue4') + 
+  geom_hline(aes(yintercept = 0)) + 
+  xlab('Species Category') + 
+  ylab('Residuals') + 
+    coord_flip()
+
+  species_bias
+</code></pre>
+
+<p><img src="README_files/figure-markdown_strict/unnamed-chunk-25-2.png" alt="">&lt;!-- --&gt;</p>
+
+<p>All in all then, we've got some heteroskedasticity that makes us a
+little suspicious of our standard errors, but no major biases in our
+estimation. Our life choice model works! Let's move to China and fish
+whatever, the model says it doesn't matter.</p>
+
+<h3>
+<a id="in-defense-of-plyr" class="anchor" href="#in-defense-of-plyr" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>In defense of <code>plyr</code>
+</h3>
+
+<p>One quick note. <code>dplyr</code> has taken over for a lot of the things we used
+to use <code>plyr</code> for. But, <code>plyr</code> is still useful for manipulating other
+types of objects instead of data frames. Specifically, I use <code>plyr</code> to
+convert lists and arrays to data frames.</p>
+
+<p>Sometimes its useful to use lists. Suppose that I have a function that I
+want to evaluate a bunch of times. Loops can be cumbersome for a variety
+of reasons. Let's write a function and apply it over a vector instead.</p>
+
+<pre><code>foo &lt;- function(x){ #random function
+
+  y &lt;- x^2
+
+  return(y)
+}
+
+food &lt;- lapply(1:100,foo) #this can be more efficient and simpler than loops
+</code></pre>
+
+<p>Now, we've applied our function over 100 values. But, they're stuck in
+list form. <code>plyr</code> to the rescue! So long as each element in every list
+has the same dimensions, <code>ldply</code> will "smash" the list into a data frame</p>
+
+<pre><code>foody &lt;- plyr::ldply(food)
+</code></pre>
+
+<p>The syntax is simple. <code>ldply</code> converts lists to data frames. <code>adply</code>
+converts arrays to data frames. You get the idea. Huge warning here.
+<strong>Make sure</strong> you load the <code>plyr</code> library <strong>before</strong> <code>dplyr</code>. Otherwise,
+bad bad things can happen. R will even throw a warning if you do it the
+other way around. Or, more simply, instead of loading the library, just
+use <code>plyr::ldply</code>. This loads that function for that instance, without
+actually loading into the environment and masking other things.</p>
+
+<h3>
+<a id="a-quick-warning-on-speed" class="anchor" href="#a-quick-warning-on-speed" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>A quick warning on speed</h3>
+
+<p>So far, we've been preaching the <code>dplyr</code> gospel pretty hard. All in all,
+it makes code faster, more efficient, and much easier to read. But,
+there are times when its best to keep it simple, especially where speed
+is critical. This is less <code>dplyr</code>'s fault, than some issues with data
+frames themselves.</p>
+
+<p>We are going to compare two functions that do the same thing, one using
+dplyr and data frames and one that uses more basic R functions. The goal
+is a function that calculates the mean length of catch history in an fao
+region</p>
+
+<pre><code>dplyr_fun &lt;- function(region,dat)
+{
+  out &lt;- dat %&gt;%
+    filter(regionfao == region) %&gt;%
+    summarise(mean_length = mean(length_catch))
+
+  return(out)
+}
+
+basic_fun &lt;- function(region,dat)
+{
+  out &lt;- mean(as.numeric(dat[dat[,'regionfao'] == region,'length_catch']))
+  return(out)
+}
+
+regions &lt;- rep(unique(as.character(regdat$regionfao)), 100) #thing to test
+
+startime &lt;-  proc.time() #time the dplyr version
+a &lt;- lapply(regions, dplyr_fun, dat = regdat)
+t1 &lt;- proc.time() - startime
+
+startime &lt;-  proc.time() #time the basic version
+b &lt;- lapply(regions, basic_fun, dat = as.matrix(regdat))
+t2 &lt;- proc.time() - startime
+
+t1[1]/t2[1]
+
+## user.self 
+##   6.82449
+
+all(plyr::ldply(a)$V1 == plyr::ldply(b)$V1) #check and make sure they do the same thing
+
+## [1] TRUE
+</code></pre>
+
+<p>The <code>dplyr</code> version of the function takes nearly 7 times as long as the
+same function in basic notation! The difference between .45 and 3.1
+seconds doesn't matter much in most cases, but if you're doing huge
+numbers of simulations, say in an MCMC, this starts to add up. This can
+be the difference between a model running a day and a few hours.</p>
+
+<p>This time sink doesn't always hold true, <code>dplyr</code> will often be faster
+than bunches of nested loops, but when speed is a priority, it's worth
+checking to see using matrices instead of data frames and <code>dplyr</code> will
+save you some serious time.</p>
+
+<h2>
+<a id="advanced-dplyr-applications" class="anchor" href="#advanced-dplyr-applications" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Advanced Dplyr Applications</h2>
+
+<h3>
+<a id="underscore-functions" class="anchor" href="#underscore-functions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Underscore Functions</h3>
+
+<p>Often, when writing functions with dplyr we may want to be able to
+specify different grouping variables. But wait, dplyr arguments use
+unquoted variable names! Have no fear, underscore is here!</p>
+
+<p>Check out the following two functions:</p>
+
+<pre><code># function using standard dplyr functions
+fun1&lt;-function(x,gpvar1,gpvar2,gpvar3){
+  y&lt;-x %&gt;%
+    group_by(gpvar1) %&gt;%
+    mutate(globalcatch=sum(totalcatch,na.rm=T),globalrank=dense_rank(totalcatch)) %&gt;% # global catch and cntry rank
+    group_by(gpvar2) %&gt;% # now we group by a different level before our next calculation
+    mutate(percglobal=100*(totalcatch/globalcatch)) %&gt;%
+    group_by(gpvar3) %&gt;%
+    mutate(ingrouprank=dense_rank(totalcatch))
+  return(y)
+}
+
+fun1(spcatch, gpvar1 = year, gpvar2 = c(year,country), gpvar3 = country) # !!!!! THIS WILL NOT WORK !!!!!
+
+# function using underscores
+fun1&lt;-function(x,gpvar1,gpvar2,gpvar3){
+  y&lt;-x %&gt;%
+    group_by_(gpvar1) %&gt;%
+    mutate(globalcatch=sum(totalcatch,na.rm=T),globalrank=dense_rank(totalcatch)) %&gt;% 
+    group_by_(gpvar2) %&gt;% 
+    mutate(percglobal=100*(totalcatch/globalcatch)) %&gt;%
+    group_by_(gpvar3) %&gt;%
+    mutate(ingrouprank=dense_rank(desc(totalcatch)))
+  return(y)
+}  
+
+# apply function to species category and country datasets
+spcatch&lt;-fun1(spcatch,gpvar1 = c('year'), gpvar2 = c('year','spgroupname'), gpvar3 = c('spgroupname')) 
+cntry&lt;-fun1(cntry,gpvar1 = c('year'), gpvar2 = c('year','country'), gpvar3 = c('country'))   
+</code></pre>
+
+<h3>
+<a id="using-dplyr-to-query-external-databases" class="anchor" href="#using-dplyr-to-query-external-databases" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using Dplyr to Query External Databases</h3>
+
+<p>Need to setup Google account first, per <a href="http://zevross.com/blog/2015/01/13/a-new-data-processing-workflow-for-r-dplyr-magrittr-tidyr-ggplot2/">A new data processing workflow
+for R: dplyr, magrittr, tidyr, ggplot2 | Technical Tidbits From Spatial
+Analysis &amp; Data
+Science</a>.</p>
+
+<pre><code># library(dplyr)
+library(bigrquery) # install.packages('bigrquery')
+sql&lt;-"select * from [publicdata:samples.shakespeare]"
+shakespeare &lt;-query_exec(sql, project ="test-bigquery-1243",max_pages=Inf)
+</code></pre>
+
+<h4>
+<a id="example-analyses" class="anchor" href="#example-analyses" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example Analyses</h4>
+
+<ul>
+<li>  <a href="http://rstudio-pubs-static.s3.amazonaws.com/25871_1ffdd88781bd4e6194d93fd327a25659.html">NOAA Storm Data - a Brief Analysis of Impact on Health and
+Economy</a>
+</li>
+<li>  <a href="http://rpubs.com/dogle/31773">dplyr example with fish data</a> (more
+on <a href="https://fishr.wordpress.com/ifar/">Introductory Fisheries Analysis with R |
+fishR</a>)</li>
+<li>  <a href="https://ropensci.org/blog/2014/03/13/rnoaa/">rnoaa - Access to NOAA National Climatic Data Center
+data</a>
+</li>
+</ul>
+        </section>
+
+        <footer>
+          Dplyr-tidyr-tutorial is maintained by <a href="https://github.com/tclavelle">tclavelle</a><br>
+          This page was generated by <a href="https://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
