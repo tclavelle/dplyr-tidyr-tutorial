@@ -323,19 +323,19 @@ Now that we have our cleaned data in a tidy format let's do some analyses. First
 
 ```{r,eval=F,echo=T}
 # Canada's fisheries from largest to smallest in 2012
-df %>%
+d %>%
   filter(country=='Canada' & year==2012) %>%
   select(year,country,commname,catch) %>%
   arrange(desc(catch))
 
 # All fisheries in the Northwest Atlantic with a catch over 1000 MT
-df %>%
+d %>%
   filter(regionfao==21 & year==2012 & catch>=1000) %>%
   select(country,commname,regionfao,catch) %>%
   arrange(desc(catch))
 
 # Which countries have the 10 largest shark fisheries?
-df %>%
+d %>%
   filter(spgroupname=='Sharks, rays, chimaeras' & year==2012) %>%
   select(country,commname,catch) %>%
   arrange(desc(catch)) %>%
@@ -360,26 +360,26 @@ Using `group_by()` and `summarize()` let's calculate total global harvest from 1
 
 ```{r,eval=F,echo=T}
 # Total global harvest
-global<-df %>%
+global <- d %>%
   group_by(year) %>%
   summarize(totalcatch=sum(catch,na.rm=T))
 
 # Global harvest by country
-cntry<-df %>%
+cntry<-d %>%
   group_by(year,country) %>%
   summarize(totalcatch=sum(catch, na.rm=T)) %>%
   ungroup() %>% # -- Here's an example of why you need to ungroup! --
   arrange(country)
 
 # Global harvest by species category
-spcatch<-df %>%
+spcatch <- d %>%
   group_by(year,spgroupname) %>%
   summarize(totalcatch=sum(catch, na.rm=T)) %>%
   ungroup() %>% 
   arrange(spgroupname)
 
 # USA harvest by species category over time
-usa<-df %>%
+usa<- d %>%
   filter(country=='United States of America') %>%
   group_by(year,country,spgroupname) %>%
   summarize(totalcatch=sum(catch,na.rm=T)) %>%
@@ -406,7 +406,127 @@ cntry %>%
 
 ### Using Dplyr with `broom` and `ggplot2`
 
-**Dan insert work here**
+One of the best aspects of working with tidy data and `dplyr` is how easy it makes it to quickly manipulate and plot your data. Property oroganized, it's a piece of cake to quickly make summaries and plots of your data without making all kinds of "temporary" files or lines of spagheti code for plotting. You can also basically eliminate loops from your coding for all situations except that those that reuiqre dynamic updating (e.g. population models). 
+
+For this next exercise, we're going to use `tidyr`, `dplyr`, `broom`, and `ggplot2` to fit a model, run diagnostics, and plot results. 
+
+It's 3am. You've been chasing the same cryptic error message for two days (<font color = 'red'> `Error: towel not found, don't panic!`</font>). You decide enough is enough: you're going to pack it in, buy a boat and become a fisherman. The only problem is, years of coding have left you with no knowledge of the outside world besides what R and data can tell you. How are you supposed to know what to fish for, or where to fish? Luckily, you have some data, so you turn to your laptop one last time before hurling it off of a cliff in a ritualistic sacrifice to the sea gods. 
+
+You want to find a fishery to join based on two criteria: high average catch, and low average variability. We are first going to. You might now know these data though, so you want to be able to predict what fishery to join based on geographic and life history traits. 
+
+Our first goals: 
+
+  1. Generate a unique ID for each fishery
+
+  2. Calculate the mean log lifetime catch of each fishery
+  
+  3. Calculate the coefficient of variation of each fishery
+  
+  4. Filter out fisheries with short time series
+  
+```{r, eval=F, echo=T}
+
+# Prep our data
+dat <- d %>%
+  ungroup() %>% #Often a good idea to ungroup before starting something new
+  mutate(id = paste(country,spcode,regionfao, sep = '_')) %>% #Generate a unique ID for each fishery
+  group_by(id) %>%
+  mutate(mean_log_catch = mean(logcatch, na.rm = T), cv_log_catch = sd(logcatch, na.rm = T)/mean(logcatch, na.rm = T), length_catch = sum(is.na(logcatch) == F & logcatch >0)) %>% # we want to keep some of the other data as well
+  filter(year == max(year) & length_catch > 10 & is.finite(mean_log_catch) == T & cv_log_catch >0) %>% # We don't want repeated entries, so let's just grab one random year
+  select(-year, -catch, -logcatch)
+ 
+# Always plot!
+  ggplot(dat, aes(mean_log_catch,cv_log_catch)) + 
+  geom_point()
+  
+```
+
+OK, we see we're onto something here: there's clearly a relationship between average catch and the CV of the catch. We want to build a model that predicts that. Let's create a composite score of the mean log catch and the inverse of the CV. We're going to scale the log catches by the maximum log catch, and the CV by the the maximum of 1/CV. We also want to add in our nice life history data 
+
+```{r, eval=F, echo=T}
+
+regdat <-  dat %>%
+  ungroup() %>% #we want global statistics now
+  mutate(scaled_ml_catch = mean_log_catch/max(mean_log_catch), scaled_cv_catch =  (cv_log_catch/min(cv_log_catch))^-1, fishiness = scaled_ml_catch + scaled_cv_catch) %>%
+  left_join(lh, by = 'sciname')
+
+  regplot <- regdat %>% #great thing about ggplot is the ability to save as an object and use and modify later
+    ggplot(aes(mean_log_catch,cv_log_catch, fill = fishiness)) + 
+  geom_point(shape = 21) + 
+    scale_fill_gradient(low = 'red',high = 'green')
+  
+  regplot # grea
+
+```
+
+Now we're getting somewhere! Now, lets run a regression using life history and geographic variables to try and predict the quality of fishing. 
+
+```{r, eval=F, echo=T}
+
+reg_vars <- c('regionfao', 'spgroupname', 'vbk','temp','maxl','agem') #specify variables you want
+
+class(regdat$regionfao) #whoops, it things FAO region is an integer, we want a factor
+
+regdat$regionfao <- as.factor(regdat$regionfao)
+
+reg_fmla <- as.formula(paste('fishiness ~',paste(reg_vars, collapse = '+'), sep = '')) #create regression formula
+
+fish_model <- lm(reg_fmla, data = regdat) #run a linear regression
+
+summary(fish_model)
+
+```
+
+Now we've got a model! we're close to being able to use data to predict where we'll start our fishing operation. But, while we know nothing about fishing, we are good statisticians, and we know we should look at our regression before using it to make a big life decision. This is where `broom` comes in. R has all kinds of great functions, like `summary()` to look at regressions. But, they can be a little ad hoc, and difficult to manipulate. `broom` helps us tidy up our regression data. First, suppose that we want a better way to look at summary statistics from the regression. The `glance()` function from the `broom` package extracts important summary statistics from the model, like the *R^2^*, the AIC, and the BIC.
+
+```{r, eval=F, echo=T}
+library(broom)
+reg_summary <- glance(fish_model)
+
+reg_summary
+```
+
+Unfortunately, our model is pretty poor; it only explains ~20% of the variation in the `fishiness` variable, but hopefully it's better than guessing. Let's dig into this model a bit more. We're going to use the `tidy()` function from the `broom` package to provide neat summaries of the model coefficients. 
+
+```{r, eval=F, echo = T}
+
+tidy_model <- tidy(fish_model)
+
+tidy_model$variable<- as.factor(tidy_model$term)
+  
+  tidy_model$variable <- reorder(tidy_model$variable, tidy_model$p.value)
+  
+  tidy_model$short_pval<- pmin(tidy_model$p.value,0.2)
+  
+  regression_plot <- (ggplot(data=tidy_model,aes(x=variable,y=estimate,fill=short_pval))+
+               geom_bar(position='dodge',stat='identity',color='black')+
+               scale_fill_gradient2(high='black',mid='gray99',low='red',midpoint=0.1,
+                                    breaks=c(0.05,0.1,0.15,0.2),labels=c('0.05','0.10','0.15','>0.20')
+                                    ,name='P-Value',guide=guide_colorbar(reverse=T))
+             +theme(axis.text.x=element_text(angle=45,hjust=0.9,vjust=0.9))+
+               geom_errorbar(mapping=aes(ymin=estimate-1.96*std.error,ymax=estimate+1.96*std.error))+
+               xlab('Variable')+
+               ylab(paste('Marginal Effect on ',names(fish_model$model)[1],sep='')) + 
+               coord_flip())
+  
+  regression_plot
+
+```
+
+
+We're now going to use the `augment()` function in the `broom` package to help us run some diagnostics. The `augment` function takes our original data passed to the regression, and adds all kinds of things, like the values predicted by the model and the residuals. 
+
+```{r, eval=F, echo=T}
+
+
+auged_reg <- augment(fish_model)
+
+```
+
+## In defense of `plyr`
+
+## A quick warning on speed
+
 
 ## Advanced Dplyr Applications
 ### Underscore Functions  
