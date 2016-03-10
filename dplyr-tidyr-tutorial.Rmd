@@ -465,15 +465,19 @@ Now we're getting somewhere! Now, lets run a regression using life history and g
 
 ```{r, eval=F, echo=T}
 
-reg_vars <- c('regionfao', 'spgroupname', 'vbk','temp','maxl','agem') #specify variables you want
+reg_vars <- c('regionfao', 'spgroupname', 'vbk','maxl','temp') #specify variables you want
 
 class(regdat$regionfao) #whoops, it things FAO region is an integer, we want a factor
 
-regdat$regionfao <- as.factor(regdat$regionfao)
+filtered_dat <- regdat %>%
+  ungroup() %>%
+  mutate(regionfao = as.factor(regionfao),spgroupname = as.factor(spgroupname),
+         has_all = apply(is.na(regdat[,reg_vars]) == F, 1,all) ) %>%
+  filter(has_all == T)
 
 reg_fmla <- as.formula(paste('fishiness ~',paste(reg_vars, collapse = '+'), sep = '')) #create regression formula
 
-fish_model <- lm(reg_fmla, data = regdat) #run a linear regression
+fish_model <- lm(reg_fmla, data = filtered_dat) #run a linear regression
 
 summary(fish_model)
 
@@ -524,6 +528,16 @@ Before we charge off and use these results though to decide where we're starting
 auged_reg <- augment(fish_model)
 
 
+obs_v_pred <- auged_reg %>%
+  ggplot(aes(fishiness, .fitted)) + 
+  geom_point(shape = 21, size = 4, alpha = 0.6, fill = 'steelblue4') + 
+  geom_abline(aes(slope=1, intercept = 0)) + 
+  xlab('ovbserved') + 
+  ylab('predicted') + 
+  geom_label(aes(0.25,0.7), label = paste('R2 = ', round(reg_summary$r.squared,2), sep = ''))
+
+obs_v_pred
+
   qq_plot <- auged_reg %>% #create quantile-quantile plot
     ggplot(aes(sample = .resid)) +
     stat_qq(shape = 21, size = 4, alpha = 0.6, fill = 'steelblue4') +
@@ -534,7 +548,7 @@ auged_reg <- augment(fish_model)
 
 ```
 
-We see that our data are in fact normally distributed, that's good! Let's check for heteroskedasticity. 
+We see that our data are in fact normally distributed, that's good! Let's check for heteroskedasticity and model misspecification. 
 
 ```{r, eval = F, echo=T}
 
@@ -549,7 +563,7 @@ hetsk_plot
 
 ```
 
-Looks a little iffy, we've got some heteroskedasticity going on. Let's try and see where it is. The great thing about `broom` is that it makes it really easy to manipulate data and plot diagnostics based on the original data. 
+Looks a little iffy, we've got some heteroskedasticity going on, and the linear model we're using might not be quite right.  Let's try and see where it is. The great thing about `broom` is that it makes it really easy to manipulate data and plot diagnostics based on the original data. 
 
 ```{r, eval=F, echo=T}
 
