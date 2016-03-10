@@ -38,7 +38,7 @@ This tutorial will cover the `tidyr` and `dplyr` packages created by the mythica
 You can [download RStudio](https://www.rstudio.com/products/rstudio/download/) if you don't have latest version `0.99.892` (menu RStudio -> About RStudio), which has many nice additions for running R chunks and providing table of contents in Rmarkdown documents.  
 
 Install and/or load the following packages:
-```{r, eval=T,echo=T,warning=FALSE, message=F}
+```{r, eval=F,echo=T,warning=FALSE, message=F}
 ## Install packages if needed
 # install.packages('devtools')
 # install.packages('readr')
@@ -72,7 +72,7 @@ devtools::session_info()
 ### Data frames and data tables
 Although technically two separate packages, **dplyr** and **tidyr** were designed to work together and can basically be thought of as a single package. They are designed to work with data frames as is, but it is generally a good idea to convert your data to table data using the `read_csv()` or `tbl_df()` functions, particularly when working with large datasets.  
 
-```{r, eval=T,echo=T}
+```{r, eval=F,echo=T}
 ## Comparing read.csv with read_csv
 # Read in FAO data
 fao   <- read.csv(file = 'data/FAO_1950to2012_111914.csv', stringsAsFactors = F) 
@@ -127,7 +127,7 @@ We'll use these verbs to process the raw FAO landings data into a more manageabl
 
 #### Gather and Spread  
 First let's convert the FAO data from the current wide format to a long format.
-```{r, eval=T,echo=T}
+```{r, eval=F,echo=T}
 # Let's convert the fao data from it's current wide format to a long format using gather(). Note the use of helper fnc
 d <- gather(fao, key='Year', value='Catch', num_range('X',1950:2012)) # ?select for num_range()
 
@@ -141,7 +141,7 @@ if (interactive()) View(d) # interactive==T if in Console, not knitting
 
 #### Rename  
 Now let's rename the columns to more manageable names (syntax is *new name* = *old name*)
-```{r, eval=T,echo=T}
+```{r, eval=F,echo=T}
 # Note the use of backticks around column names with special characters like "("
 d <- dplyr::rename(d,
           country     = Country..Country.,
@@ -159,7 +159,7 @@ d <- dplyr::rename(d,
 
 #### Select  
 Remove unwanted columns and observations.  
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 # we could chose all the columns to keep
 select(d,country, commname, sciname, spcode, spgroupname, regionfao, year, catch)
 
@@ -168,7 +168,7 @@ d<-select(d,-spgroup,-unit)
 ```
 
 There are also a number of **helper functions** that can be used in conjunction with `select()` to let you select without individually listing all those you wish to keep or drop. We used a helper function previously in our `gather()` function and now we'll try a few others.  
-```{r,eval=T,echo=T}
+```{r,eval=F,echo=T}
 # select all coloumns that begin with the letter s
 select(d, starts_with('s'))
 
@@ -185,7 +185,7 @@ select(d,everything())
 
 #### Arrange  
 Arrange entries by country, scientific name, fao region and year. You can use `desc()` within `arrange()` to control which variables you want to order in ascending or descending fashion 
-```{r, eval=T,echo=T}
+```{r, eval=F,echo=T}
 # arrange by country, sciname, regionfao, and year
 d<-arrange(d,country,sciname,regionfao,year)
 
@@ -200,7 +200,7 @@ arrange(d, sciname, country, regionfao, year)
 
 #### Mutate  
 Mutate can be used to edit existing variables or create new ones.
-```{r, eval=T,echo=T}
+```{r, eval=F,echo=T}
 d <- mutate(d,
             year      = as.numeric(str_replace(year, 'X', '')), # strip X off all year values and convert to numeric
             catch     = as.numeric(str_replace(catch, c(' F','...','-'), replacement = '')),
@@ -210,7 +210,7 @@ d <- mutate(d,
 
 #### Filter  
 Remove unwanted columns and observations.
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 # remove the "Totals" values and any years with NA catch values
 d<-filter(d,!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')) & !is.na(catch))
 
@@ -226,7 +226,7 @@ When using the `%>%` operator, first specify the data frame that all following f
 
 Now consider the same process as before only using pipes and a single dplyr chain:
 
-```{r,eval=T,echo=T}
+```{r,eval=F,echo=T}
 d <- fao %>%
   gather(key='Year',value = 'Catch',num_range('X',1950:2012)) %>% # convert to long format
   rename(
@@ -259,7 +259,7 @@ By chaining our code we were able to reproduce the same data frame without the n
 #### Complete  
 Now our data is nice and tidy, but we realize that we actually want to retain NA values for years with missing catch data. We could just go back and remove the second argument from our `filter()` function. Or we could use the nifty `complete()` function to add in the missing combinations.  
 
-```{r,eval=T,echo=T}
+```{r,eval=F,echo=T}
 d<- d %>%
   group_by(country,sciname,commname,regionfao) %>%
   complete(year = 1950:2012, nesting(country,sciname,regionfao,commname,spgroupname,spcode)) 
@@ -272,7 +272,7 @@ The `df$spcode` variable actually consists of 5 individual parts.
 ![](spcodes.png)
 
 We decide we want to create a new column for each taxonomic division of the spcode. We can accomplish this with `separate()` and undue it with `unite()`
-```{r, eval=T,echo=T}
+```{r, eval=F,echo=T}
 # create new variables for each taxonomic component 
 d<-separate(d,spcode, into = c('maintaxa','order','family','genus','species'), sep = c(2,4,6,9))
 
@@ -295,7 +295,7 @@ For joins to work, variable names must be the same in both datasets. This often 
 + `full_join(a, b, by = c('...'))` join data, retaining all values, all rows
 
 Lets use a left join to add the life history parameters to our FAO data
-```{r,eval=T,echo=T}
+```{r,eval=F,echo=T}
 # read in life history data
 load(file = 'data/mpack.Rdata')
 lh<-mpack$lh
@@ -323,7 +323,7 @@ d %>%
 ## Analyzing and Manipulating Data  
 Now that we have our cleaned data in a tidy format let's do some analyses. First, here are a few more simple examples of chaining code to select, filter, and arrange our data to obtain different subsets. 
 
-```{r,eval=T,echo=T}
+```{r,eval=F,echo=T}
 # Canada's fisheries from largest to smallest in 2012
 d %>%
   filter(country=='Canada' & year==2012) %>%
@@ -360,7 +360,7 @@ The `group_by()` function lets you specify the level across which to apply your 
 
 Using `group_by()` and `summarize()` let's calculate total global harvest from 1950 to 2012 for several groups of data
 
-```{r,eval=T,echo=T}
+```{r,eval=F,echo=T}
 # Total global harvest
 global <- d %>%
   group_by(year) %>%
@@ -391,7 +391,7 @@ usa<- d %>%
 
 
 Now let's use mutate to calculate some additional information for our datasets  
-```{r, eval=T,echo=T}
+```{r, eval=F,echo=T}
 # Calculate what % of global catch each country contributes in each year and for rank each year by that %
 cntry %>%
   group_by(year) %>%
@@ -426,7 +426,7 @@ Our first goals:
 
 4. Filter out fisheries with short time series
 
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 
 # Prep our data
 dat <- d %>%
@@ -445,7 +445,7 @@ ggplot(dat, aes(mean_log_catch,cv_log_catch)) +
 
 OK, we see we're onto something here: there's clearly a relationship between average catch and the CV of the catch. We want to build a model that predicts that. Let's create a composite score of the mean log catch and the inverse of the CV. We're going to scale the log catches by the maximum log catch, and the CV by the the maximum of 1/CV. We also want to add in our nice life history data 
 
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 
 regdat <-  dat %>%
   ungroup() %>% #we want global statistics now
@@ -463,7 +463,7 @@ regplot # grea
 
 Now we're getting somewhere! Now, lets run a regression using life history and geographic variables to try and predict the quality of fishing. 
 
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 
 reg_vars <- c('regionfao', 'spgroupname', 'vbk','temp','maxl','agem') #specify variables you want
 
@@ -481,7 +481,7 @@ summary(fish_model)
 
 Now we've got a model! we're close to being able to use data to predict where we'll start our fishing operation. But, while we know nothing about fishing, we are good statisticians, and we know we should look at our regression before using it to make a big life decision. This is where `broom` comes in. R has all kinds of great functions, like `summary()` to look at regressions. But, they can be a little ad hoc, and difficult to manipulate. `broom` helps us tidy up our regression data. First, suppose that we want a better way to look at summary statistics from the regression. The `glance()` function from the `broom` package extracts important summary statistics from the model, like the *R^2^*, the AIC, and the BIC.
 
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 library(broom)
 reg_summary <- glance(fish_model)
 
@@ -490,7 +490,7 @@ reg_summary
 
 Unfortunately, our model is pretty poor; it only explains ~20% of the variation in the `fishiness` variable, but hopefully it's better than guessing. Let's dig into this model a bit more. We're going to use the `tidy()` function from the `broom` package to provide neat summaries of the model coefficients. 
 
-```{r, eval=T, echo = T}
+```{r, eval=F, echo = T}
 
 tidy_model <- tidy(fish_model)
 
@@ -519,7 +519,7 @@ So, we can now see that most of the significant terms are region specific, and t
 
 Before we charge off and use these results though to decide where we're starting our new life, we're now going to use the `augment()` function in the `broom` package to help us run some diagnostics on the regression. The `augment` function takes our original data passed to the regression, and adds all kinds of things, like the values predicted by the model and the residuals. This makes it very useful for regression diagnostics. First off, we might want to check whether our errors are actually normally distributed
 
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 
 auged_reg <- augment(fish_model)
 
@@ -551,7 +551,7 @@ hetsk_plot
 
 Looks a little iffy, we've got some heteroskedasticity going on. Let's try and see where it is. The great thing about `broom` is that it makes it really easy to manipulate data and plot diagnostics based on the original data. 
 
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 
 
   hetsk_plot2 <- auged_reg %>% 
@@ -568,7 +568,7 @@ hetsk_plot2
 
 So, we see here that the culprit are the herrings and salmons. That tells us to be a little cautious in our predictive ability based on this model, and maybe we need to do a better job of clustering our errors. Let's look at things another way. We saw from the coefficient plot that the region effects are the most significant in the model. How confident are we in those?
 
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 
   regional_bias <- auged_reg %>% #Check residuals by group
   ggplot(aes(regionfao,.resid)) + 
@@ -598,7 +598,7 @@ One quick note. `dplyr` has taken over for a lot of the things we used to use `p
 
 Sometimes its useful to use lists. Suppose that I have a function that I want to evaluate a bunch of times. Loops can be cumbersome for a variety of reasons. Let's write a function and apply it over a vector instead. 
 
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 
 foo <- function(x){ #random function
   
@@ -613,7 +613,7 @@ food <- lapply(1:100,foo) #this can be more efficient and simpler than loops
 
 Now, we've applied our function over 100 values. But, they're stuck in list form. `plyr` to the rescue! So long as each element in every list has the same dimensions, `ldply` will "smash" the list into a data frame
 
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 
 
 foody <- plyr::ldply(food)
@@ -629,7 +629,7 @@ So far, we've been preaching the `dplyr` gospel pretty hard. All in all, it make
 
 We are going to compare two functions that do the same thing, one using dplyr and data frames and one that uses more basic R functions. The goal is a function that calculates the mean length of catch history in an fao region
 
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 
 dplyr_fun <- function(region,dat)
 {
@@ -672,7 +672,7 @@ Often, when writing functions with dplyr we may want to be able to specify diffe
 
 Check out the following two functions:
 
-```{r,eval=T,echo=T}
+```{r,eval=F,echo=T}
 # function using standard dplyr functions
 fun1<-function(x,gpvar1,gpvar2,gpvar3){
   y<-x %>%
@@ -709,7 +709,7 @@ cntry<-fun1(cntry,gpvar1 = c('year'), gpvar2 = c('year','country'), gpvar3 = c('
 
 Need to setup Google account first, per [A new data processing workflow for R: dplyr, magrittr, tidyr, ggplot2 | Technical Tidbits From Spatial Analysis & Data Science](http://zevross.com/blog/2015/01/13/a-new-data-processing-workflow-for-r-dplyr-magrittr-tidyr-ggplot2/).
 
-```{r bigrquery, eval=T}
+```{r bigrquery, eval=F}
 # library(dplyr)
 library(bigrquery) # install.packages('bigrquery')
 
