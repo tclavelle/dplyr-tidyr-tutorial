@@ -38,7 +38,7 @@ This tutorial will cover the `tidyr` and `dplyr` packages created by the mythica
 You can [download RStudio](https://www.rstudio.com/products/rstudio/download/) if you don't have latest version `0.99.892` (menu RStudio -> About RStudio), which has many nice additions for running R chunks and providing table of contents in Rmarkdown documents.  
 
 Install and/or load the following packages:
-```{r, eval=F,echo=T,warning=FALSE, message=F}
+```{r, eval = TRUE,echo=T,warning=FALSE, message=F}
 ## Install packages if needed
 # install.packages('devtools')
 # install.packages('readr')
@@ -295,7 +295,7 @@ For joins to work, variable names must be the same in both datasets. This often 
 + `full_join(a, b, by = c('...'))` join data, retaining all values, all rows
 
 Lets use a left join to add the life history parameters to our FAO data
-```{r,eval=F,echo=T}
+```{r,eval=T,echo=T, message=F, tidy=T}
 # read in life history data
 load(file = 'data/mpack.Rdata')
 lh<-mpack$lh
@@ -549,7 +549,7 @@ obs_v_pred
 
 We see that our data are in fact normally distributed, that's good! Let's check for heteroskedasticity and model misspecification. 
 
-```{r, eval = F, echo=T}
+```{r, eval=F, echo=T}
 
   hetsk_plot <- auged_reg %>% #plot fitted vs residuals
     ggplot(aes(.fitted, .resid)) +
