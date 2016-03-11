@@ -213,7 +213,7 @@ d <- mutate(d,
 
 
 #### Filter  
-Remove unwanted columns and observations.
+Remove unwanted rows/observations.
 ```{r, eval=T, echo=T,results='hide'}
 # remove the "Totals" values and any years with NA catch values
 d<-filter(d,!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')) & !is.na(catch))
@@ -501,7 +501,7 @@ filtered_dat <- regdat %>%
 
 reg_fmla <- as.formula(paste('fishiness ~',paste(reg_vars, collapse = '+'), sep = '')) #create regression formula
 
-fish_model <- lm(reg_fmla, data = sample_n(filtered_dat, 10000, replace = T)) #run a linear regression
+fish_model <- lm(reg_fmla, data = filtered_dat) #run a linear regression
 summary(fish_model)
 
 ```

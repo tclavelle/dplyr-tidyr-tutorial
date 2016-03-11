@@ -249,7 +249,7 @@ Mutate can be used to edit existing variables or create new ones.
 
 #### Filter
 
-Remove unwanted columns and observations.
+Remove unwanted rows/observations.
 
     # remove the "Totals" values and any years with NA catch values
     d<-filter(d,!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')) & !is.na(catch))
@@ -324,7 +324,7 @@ combinations.
 
 The `df$spcode` variable actually consists of 5 individual parts.
 
-![](./downloads/spcodes.png)
+![](spcodes.png)
 
 We decide we want to create a new column for each taxonomic division of
 the spcode. We can accomplish this with `separate()` and undue it with
@@ -590,7 +590,7 @@ fishing.
 
     reg_fmla <- as.formula(paste('fishiness ~',paste(reg_vars, collapse = '+'), sep = '')) #create regression formula
 
-    fish_model <- lm(reg_fmla, data = sample_n(filtered_dat, 10000, replace = T)) #run a linear regression
+    fish_model <- lm(reg_fmla, data = filtered_dat) #run a linear regression
     summary(fish_model)
 
 Now we've got a model! we're close to being able to use data to predict
@@ -816,7 +816,7 @@ region
     t1[1]/t2[1]
 
     ## user.self 
-    ##   6.82449
+    ##  6.785075
 
     all(plyr::ldply(a)$V1 == plyr::ldply(b)$V1) #check and make sure they do the same thing
 
