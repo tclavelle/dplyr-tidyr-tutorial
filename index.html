@@ -20,7 +20,7 @@
     <header>
       <div class="inner">
         <h1>Dplyr-tidyr-tutorial</h1>
-        <h2>Tutorial on dplyr and tidyr packages for UCSB&#39;s Eco-Data-Science group</h2>
+        <h2>Tutorial on dplyr and tidyr packages for UCSB&#39;s Eco-Data-Science group by Tyler Clavelle &amp; Dan Ovando</h2>
         <a href="https://github.com/tclavelle/dplyr-tidyr-tutorial" class="button"><small>View project on</small> GitHub</a>
       </div>
     </header>
@@ -334,7 +334,7 @@ arrange(d, sciname, country, regionfao, year)
 <h4>
 <a id="filter" class="anchor" href="#filter" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Filter</h4>
 
-<p>Remove unwanted columns and observations.</p>
+<p>Remove unwanted rows/observations.</p>
 
 <pre><code># remove the "Totals" values and any years with NA catch values
 d&lt;-filter(d,!(country %in% c('Totals - Quantity (number)','Totals - Quantity (tonnes)')) &amp; !is.na(catch))
@@ -701,7 +701,7 @@ filtered_dat &lt;- regdat %&gt;%
 
 reg_fmla &lt;- as.formula(paste('fishiness ~',paste(reg_vars, collapse = '+'), sep = '')) #create regression formula
 
-fish_model &lt;- lm(reg_fmla, data = sample_n(filtered_dat, 10000, replace = T)) #run a linear regression
+fish_model &lt;- lm(reg_fmla, data = filtered_dat) #run a linear regression
 summary(fish_model)
 </code></pre>
 
@@ -941,7 +941,7 @@ t2 &lt;- proc.time() - startime
 t1[1]/t2[1]
 
 ## user.self 
-##   6.82449
+##  6.785075
 
 all(plyr::ldply(a)$V1 == plyr::ldply(b)$V1) #check and make sure they do the same thing
 
