@@ -154,10 +154,10 @@ Now let's rename the columns to more manageable names (syntax is *new name* = *o
 d <- dplyr::rename(d,
           country     = Country..Country.,
           commname    = Species..ASFIS.species.,
-          sciname     = Species..ASFIS.species..2,
-          spcode      = Species..ASFIS.species..1,
+          sciname     = Species..ASFIS.species._2,
+          spcode      = Species..ASFIS.species._1,
           spgroup     = Species..ISSCAAP.group.,
-          spgroupname = Species..ISSCAAP.group..1,
+          spgroupname = Species..ISSCAAP.group._1,
           regionfao   = Fishing.area..FAO.major.fishing.area.,
           unit        = Measure..Measure.,
           year        = Year,catch=Catch)
@@ -241,10 +241,10 @@ d <- fao %>%
     country     = Country..Country., # rename columns
     #country     = `Country (Country)`, # backtick trick!
     commname    = Species..ASFIS.species.,
-    spcode      = Species..ASFIS.species..1,
-    sciname     = Species..ASFIS.species..2,
+    spcode      = Species..ASFIS.species._1,
+    sciname     = Species..ASFIS.species._2,
     spgroup     = Species..ISSCAAP.group.,
-    spgroupname = Species..ISSCAAP.group..1,
+    spgroupname = Species..ISSCAAP.group._1,
     regionfao   = Fishing.area..FAO.major.fishing.area.,
     unit        = Measure..Measure.,
     year        = Year,
