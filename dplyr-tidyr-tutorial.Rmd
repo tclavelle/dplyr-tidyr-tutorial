@@ -6,6 +6,7 @@ output:
   html_document:
     theme: spacelab
     toc: yes
+    toc_float: yes
   pdf_document:
     toc: yes
 ---
@@ -51,13 +52,10 @@ Install and/or load the following packages:
 
 # Load packages
 library(devtools)
-library(readr)
-# library(plyr)
-library(dplyr)
+library(tidyverse)
+library(forcats)
 library(broom)
-library(tidyr)
 library(stringr)
-library(ggplot2)
 
 # Check package versions after Packages pane -> Update
 devtools::session_info()
